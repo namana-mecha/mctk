@@ -381,7 +381,7 @@ impl Component for Div {
                 .pos(context.aabb.pos)
                 .scale(context.aabb.size())
                 .border_color(color)
-                .border_size(width)
+                .border_size((width, width, width, width))
                 .radius(radius)
                 .build()
                 .unwrap();

@@ -9,6 +9,14 @@ use cosmic_text::Weight;
 use crate::layout::*;
 use crate::types::*;
 
+#[derive(Debug, Copy, Clone, PartialEq, Default)]
+pub struct BorderWidth {
+    pub top: f32,
+    pub left: f32,
+    pub bottom: f32,
+    pub right: f32,
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum VerticalPosition {
     Bottom,
@@ -33,6 +41,15 @@ impl Default for HorizontalPosition {
     fn default() -> Self {
         Self::Right
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum IconButtonSize {
+    Xs,
+    Sm,
+    Md,
+    Xl,
+    XXl,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -65,6 +82,7 @@ pub enum StyleVal {
     Layout(Layout),
     HorizontalPosition(HorizontalPosition),
     VerticalPosition(VerticalPosition),
+    BorderWidth(BorderWidth),
     FontWeight(FontWeight),
     Float(f64),
     Int(u32),
@@ -174,13 +192,21 @@ impl Default for Style {
             ),
             // IconButton
             (
+                StyleKey::new("IconButton", "size", None),
+                IconButtonSize::Sm.into(),
+            ),
+            (
                 StyleKey::new("IconButton", "text_color", None),
                 Color::BLACK.into(),
             ),
             (StyleKey::new("IconButton", "font_size", None), 12.0.into()),
             (
                 StyleKey::new("IconButton", "background_color", None),
-                Color::WHITE.into(),
+                Color::BLACK.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "background_color", Some("light")),
+                Color::DARK_GREY.into(),
             ),
             (
                 StyleKey::new("IconButton", "highlight_color", None),
@@ -188,18 +214,18 @@ impl Default for Style {
             ),
             (
                 StyleKey::new("IconButton", "active_color", None),
-                Color::MID_GREY.into(),
+                Color::rgb(132., 132., 132.).into(),
             ),
             (
                 StyleKey::new("IconButton", "border_color", None),
-                Color::TRANSPARENT.into(),
+                Color::rgb(132., 132., 132.).into(),
             ),
             (
                 StyleKey::new("IconButton", "border_width", None),
-                0.0.into(),
+                2.0.into(),
             ),
-            (StyleKey::new("IconButton", "radius", None), 4.0.into()),
-            (StyleKey::new("IconButton", "padding", None), 2.0.into()),
+            (StyleKey::new("IconButton", "radius", None), 0.0.into()),
+            (StyleKey::new("IconButton", "padding", None), 10.0.into()),
             // RadioButton
             (
                 StyleKey::new("RadioButton", "text_color", None),
@@ -211,7 +237,7 @@ impl Default for Style {
             ),
             (
                 StyleKey::new("RadioButton", "background_color", None),
-                Color::WHITE.into(),
+                Color::TRANSPARENT.into(),
             ),
             (
                 StyleKey::new("RadioButton", "highlight_color", None),
@@ -219,11 +245,11 @@ impl Default for Style {
             ),
             (
                 StyleKey::new("RadioButton", "active_color", None),
-                Color::MID_GREY.into(),
+                Color::rgb(45., 138., 255.).into(),
             ),
             (
                 StyleKey::new("RadioButton", "border_color", None),
-                Color::BLACK.into(),
+                Color::rgb(83., 83., 83.).into(),
             ),
             (
                 StyleKey::new("RadioButton", "border_width", None),
@@ -294,15 +320,51 @@ impl Default for Style {
             // TextBox
             (StyleKey::new("TextBox", "font_size", None), 12.0.into()),
             (
+                StyleKey::new("TextBox", "font_size", Some("text-xs")),
+                14.0.into(),
+            ),
+            (
+                StyleKey::new("TextBox", "font_size", Some("text-sm")),
+                16.0.into(),
+            ),
+            (
+                StyleKey::new("TextBox", "font_size", Some("text-md")),
+                18.0.into(),
+            ),
+            (
+                StyleKey::new("TextBox", "font_size", Some("text-l")),
+                20.0.into(),
+            ),
+            (
+                StyleKey::new("TextBox", "font_size", Some("text-xl")),
+                22.0.into(),
+            ),
+            (
+                StyleKey::new("TextBox", "font_size", Some("text-xxl")),
+                24.0.into(),
+            ),
+            (
                 StyleKey::new("TextBox", "text_color", None),
-                Color::BLACK.into(),
+                Color::WHITE.into(),
+            ),
+            (
+                StyleKey::new("TextBox", "text_color", Some("light")),
+                Color::rgb(14., 14., 14.).into(),
             ),
             (
                 StyleKey::new("TextBox", "placeholder_color", None),
-                Color::BLACK.into(),
+                Color::rgb(132., 132., 132.).into(),
+            ),
+            (
+                StyleKey::new("TextBox", "placeholder_color", Some("light")),
+                Color::rgb(148., 148., 148.).into(),
             ),
             (
                 StyleKey::new("TextBox", "background_color", None),
+                Color::rgb(49., 49., 49.).into(),
+            ),
+            (
+                StyleKey::new("TextBox", "background_color", Some("light")),
                 Color::WHITE.into(),
             ),
             (
@@ -315,9 +377,20 @@ impl Default for Style {
             ),
             (
                 StyleKey::new("TextBox", "border_color", None),
-                Color::BLACK.into(),
+                Color::rgb(132., 132., 132.).into(),
             ),
-            (StyleKey::new("TextBox", "border_width", None), 1.0.into()),
+            (
+                StyleKey::new("TextBox", "border_color", Some("light")),
+                Color::rgb(209., 209., 209.).into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", None),
+                BorderWidth {
+                    top: 1.5,
+                    ..Default::default()
+                }
+                .into(),
+            ),
             (StyleKey::new("TextBox", "padding", None), 1.0.into()),
             (
                 StyleKey::new("TextBox", "font_weight", None),
@@ -325,11 +398,21 @@ impl Default for Style {
             ),
             // Text
             (StyleKey::new("Text", "size", None), 12.0.into()),
+            (StyleKey::new("Text", "size", Some("text-xs")), 14.0.into()),
+            (StyleKey::new("Text", "size", Some("text-sm")), 16.0.into()),
+            (StyleKey::new("Text", "size", Some("text-md")), 18.0.into()),
+            (StyleKey::new("Text", "size", Some("text-l")), 20.0.into()),
+            (StyleKey::new("Text", "size", Some("text-xl")), 22.0.into()),
+            (StyleKey::new("Text", "size", Some("text-xxl")), 24.0.into()),
             (
                 StyleKey::new("Text", "font_weight", None),
                 FontWeight::Normal.into(),
             ),
             (StyleKey::new("Text", "color", None), Color::BLACK.into()),
+            (
+                StyleKey::new("Text", "color", Some("light")),
+                Color::WHITE.into(),
+            ),
             (
                 StyleKey::new("Text", "h_alignment", None),
                 HorizontalPosition::Left.into(),
@@ -432,11 +515,13 @@ pub trait Styled: Sized {
         if let Some(v) = self.style_overrides().0.get(param) {
             Some(v.clone())
         } else if let Some(c) = self.class() {
-            if let Some(v) = get_current_style(self.style_key(param, Some(c))) {
-                Some(v)
-            } else {
-                get_current_style(self.style_key(param, None))
+            // println!("param {:?} class {:?}", param, c);
+            for c in c.split(" ").collect::<Vec<&str>>() {
+                if let Some(v) = get_current_style(self.style_key(param, Some(c))) {
+                    return Some(v);
+                }
             }
+            get_current_style(self.style_key(param, None))
         } else {
             get_current_style(self.style_key(param, None))
         }
@@ -483,7 +568,56 @@ macro_rules! style {
 // TODO we need some way to add more context to these errors, or otherwise prevent them from happening.
 // Right now, if you add the wrong type expected for a given style, the error message is terrible.
 
-// StyleVal Froms
+//   Froms
+impl From<BorderWidth> for StyleVal {
+    fn from(bw: BorderWidth) -> Self {
+        Self::BorderWidth(bw)
+    }
+}
+impl From<StyleVal> for BorderWidth {
+    fn from(v: StyleVal) -> Self {
+        match v {
+            StyleVal::BorderWidth(c) => c,
+            x => panic!("Tried to coerce {x:?} into a border width"),
+        }
+    }
+}
+impl From<Option<StyleVal>> for BorderWidth {
+    fn from(v: Option<StyleVal>) -> Self {
+        match v {
+            Some(StyleVal::BorderWidth(c)) => c,
+            x => panic!("Tried to coerce {x:?} into a border width"),
+        }
+    }
+}
+
+impl From<IconButtonSize> for StyleVal {
+    fn from(s: IconButtonSize) -> Self {
+        match s {
+            IconButtonSize::Xs => Self::Size(Size {
+                width: Dimension::Px(18.),
+                height: Dimension::Px(18.),
+            }),
+            IconButtonSize::Sm => Self::Size(Size {
+                width: Dimension::Px(24.),
+                height: Dimension::Px(24.),
+            }),
+            IconButtonSize::Md => Self::Size(Size {
+                width: Dimension::Px(32.),
+                height: Dimension::Px(32.),
+            }),
+            IconButtonSize::Xl => Self::Size(Size {
+                width: Dimension::Px(48.),
+                height: Dimension::Px(48.),
+            }),
+            IconButtonSize::XXl => Self::Size(Size {
+                width: Dimension::Px(88.),
+                height: Dimension::Px(88.),
+            }),
+        }
+    }
+}
+
 impl From<Color> for StyleVal {
     fn from(c: Color) -> Self {
         Self::Color(c)

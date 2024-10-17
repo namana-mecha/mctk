@@ -190,6 +190,7 @@ impl super::Renderer for CanvasRenderer {
 
     /// This default is provided for tests, it should be overridden
     fn caches(&self) -> Caches {
+        // println!("caches()");
         Caches {
             font: Arc::new(RwLock::new(FontCache::new(self.fonts.clone()))),
         }

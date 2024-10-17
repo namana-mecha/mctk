@@ -394,7 +394,7 @@ impl Node {
                             scissor: Some(true),
                             background_color: Color::TRANSPARENT,
                             border_color: Color::TRANSPARENT,
-                            border_width: 0.,
+                            border_width: (0., 0., 0., 0.),
                             radius: (0., 0., 0., 0.),
                             swipe: 0
                         })),
@@ -402,7 +402,7 @@ impl Node {
                             scissor: Some(false),
                             background_color: Color::TRANSPARENT,
                             border_color: Color::TRANSPARENT,
-                            border_width: 0.,
+                            border_width: (0., 0., 0., 0.),
                             radius: (0., 0., 0., 0.),
                             swipe: 0
                         })),

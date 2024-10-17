@@ -4,10 +4,11 @@ use std::time::Instant;
 // use super::ToolTip;
 use crate::component::{Component, Message};
 use crate::font_cache::TextSegment;
+use crate::layout::Size;
 use crate::style::{HorizontalPosition, Styled};
 use crate::{event, lay, rect};
 use crate::{node, node::Node};
-use crate::{size_pct, types::*};
+use crate::{size, size_pct, types::*};
 use mctk_macros::{component, state_component_impl};
 use serde::{Deserialize, Serialize};
 
@@ -101,18 +102,21 @@ impl Component for IconButton {
         let background_color: Color = self.style_val("background_color").into();
         let border_color: Color = self.style_val("border_color").into();
         let border_width: f32 = self.style_val("border_width").unwrap().f32();
+        let size: Size = self.style_val("size").unwrap().into();
+        let (width, height) = size.fixed();
+        // println!("size {:?} padding {:?}", size, padding);
 
         let icon = match self.icon_type {
             IconType::Svg => node!(
                 super::Svg::new(self.icon.clone()),
                 lay![
-                    size: size_pct!(100.0),
+                    size: [width as f64 - padding, height as f64 - padding],
                 ],
             ),
             IconType::Png => node!(
                 super::Image::new(self.icon.clone()),
                 lay![
-                    size: size_pct!(100.0),
+                    size: [width as f64 - padding, height as f64 - padding],
                 ],
             ),
         };
@@ -127,12 +131,12 @@ impl Component for IconButton {
                     background_color
                 },
                 border_color,
-                border_width,
+                border_width: (border_width, border_width, border_width, border_width),
                 radius: (radius, radius, radius, radius),
                 ..Default::default()
             },
             lay!(
-                size: size_pct!(100.0),
+                size: [width as f64, height as f64],
                 padding: rect!(padding),
                 margin: rect!(border_width / 2.0),
                 cross_alignment: crate::layout::Alignment::Center,

@@ -10,7 +10,7 @@ use std::hash::Hash;
 pub struct RoundedRect {
     pub background_color: Color,
     pub border_color: Color,
-    pub border_width: f32,
+    pub border_width: (f32, f32, f32, f32),
     pub radius: (f32, f32, f32, f32),
     pub scissor: Option<bool>,
     pub swipe: i32,
@@ -21,7 +21,7 @@ impl Default for RoundedRect {
         Self {
             background_color: Color::WHITE,
             border_color: Color::BLACK,
-            border_width: 0.0,
+            border_width: (0., 0.,  0., 0.),
             radius: (3.0, 3.0, 3.0, 3.0),
             scissor: None,
             swipe: 0,
@@ -34,7 +34,7 @@ impl RoundedRect {
         Self {
             background_color: bg.into(),
             border_color: Color::BLACK,
-            border_width: 0.0,
+            border_width: (0., 0.,  0., 0.),
             radius: (radius, radius, radius, radius),
             scissor: None,
             swipe: 0,
@@ -56,7 +56,7 @@ impl Component for RoundedRect {
     fn render_hash(&self, hasher: &mut ComponentHasher) {
         self.background_color.hash(hasher);
         self.border_color.hash(hasher);
-        (self.border_width as u32).hash(hasher);
+        (self.border_width.0 as u32, self.border_width.1 as u32, self.border_width.2 as u32, self.border_width.3 as u32).hash(hasher);
         (self.radius.0 as i32).hash(hasher);
         (self.radius.1 as i32).hash(hasher);
         (self.radius.2 as i32).hash(hasher);
