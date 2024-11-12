@@ -1,10 +1,5 @@
-use mctk_core::component::{Component, Message, RenderContext, RootComponent};
-use mctk_core::reexports::cosmic_text;
+use mctk_core::prelude::*;
 use mctk_core::renderables::{types, Renderable};
-use mctk_core::style::Styled;
-use mctk_core::widgets::Button;
-use mctk_core::{lay, msg, size, txt, AssetParams, Color};
-use mctk_core::{node, node::Node};
 use mctk_macros::{component, state_component_impl};
 use mctk_smithay::session_lock::lock_window::{
     self, SessionLockMessage, SessionLockWindow, SessionLockWindowParams,

@@ -1,9 +1,5 @@
-use mctk_core::component::{Component, RootComponent};
-use mctk_core::reexports::cosmic_text;
+use mctk_core::prelude::*;
 use mctk_core::renderables::types;
-use mctk_core::widgets::{Carousel, Div};
-use mctk_core::{lay, size, AssetParams};
-use mctk_core::{node, node::Node};
 use mctk_smithay::layer_shell::layer_surface::LayerOptions;
 use mctk_smithay::layer_shell::layer_window;
 use mctk_smithay::layer_shell::layer_window::LayerWindowParams;
