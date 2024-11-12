@@ -34,7 +34,7 @@ impl Toggle {
         Self {
             active,
             on_change: None,
-            state: Some(ToggleState::default()),
+            state: Some(ToggleState { pressed: active }),
             dirty: false,
             class: Default::default(),
             style_overrides: Default::default(),
