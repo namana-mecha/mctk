@@ -57,20 +57,24 @@ impl Component for Toggle {
         self.state_mut().pressed = !self.state_ref().pressed;
     }
 
+    fn on_touch_down(&mut self, _event: &mut event::Event<event::TouchDown>) {
+        self.state_mut().pressed = !self.state_ref().pressed;
+    }
+
     // fn on_mouse_up(&mut self, _event: &mut event::Event<event::MouseUp>) {
     //     self.state_mut().pressed = false;
     // }
 
     fn on_click(&mut self, event: &mut event::Event<event::Click>) {
         if let Some(f) = &self.on_change {
-            event.emit(f(!self.state_ref().pressed));
+            event.emit(f(self.state_ref().pressed));
         }
     }
 
     // Same as on_click
     fn on_double_click(&mut self, event: &mut event::Event<event::DoubleClick>) {
         if let Some(f) = &self.on_change {
-            event.emit(f(!self.state_ref().pressed));
+            event.emit(f(self.state_ref().pressed));
         }
     }
 
