@@ -1,4 +1,5 @@
 pub mod component;
+pub mod context;
 pub mod event;
 pub mod font_cache;
 pub mod instrumenting;
