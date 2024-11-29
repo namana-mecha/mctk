@@ -1,8 +1,6 @@
-use lazy_static::lazy_static;
-use mctk_core::context::Context;
+mod contexts;
 use mctk_core::layout::Alignment;
 use mctk_core::prelude::*;
-use mctk_core::reexports::femtovg::img::imageops::ColorMap;
 use mctk_core::reexports::smithay_client_toolkit::{
     reexports::calloop::{self, channel::Event},
     shell::wlr_layer,
@@ -17,33 +15,7 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-lazy_static! {
-    static ref MODEL: ContextModel = ContextModel::new();
-}
-
-struct ContextModel {
-    runtime: tokio::runtime::Runtime,
-    pub timer: Context<u32>,
-}
-
-impl ContextModel {
-    pub fn new() -> Self {
-        ContextModel {
-            runtime: tokio::runtime::Runtime::new().unwrap(),
-            timer: Context::new(10),
-        }
-    }
-
-    fn update(&'static self) {
-        self.runtime.spawn(async {
-            loop {
-                tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
-                let i = *self.timer.get();
-                self.timer.set(i + 1);
-            }
-        });
-    }
-}
+use crate::contexts::weather_api::WeatherAPI;
 
 #[derive(Debug)]
 pub enum AppMessage {
@@ -52,12 +24,10 @@ pub enum AppMessage {
 
 #[derive(Clone)]
 pub struct AppParams {
-    timer: &'static Context<u32>,
     app_channel: Option<calloop::channel::Sender<AppMessage>>,
 }
 
 pub struct AppState {
-    timer: &'static Context<u32>,
     window_sender: Option<Sender<XdgWindowMessage>>,
     app_channel: Option<Sender<AppMessage>>,
 }
@@ -65,7 +35,6 @@ pub struct AppState {
 impl Default for AppState {
     fn default() -> Self {
         AppState {
-            timer: Box::leak(Box::new(Context::new(0))),
             window_sender: None,
             app_channel: None,
         }
@@ -86,24 +55,51 @@ pub struct App {}
 impl Component for App {
     fn init(&mut self) {
         self.state = Some(AppState {
-            timer: Box::leak(Box::new(Context::new(0))),
             window_sender: None,
             app_channel: None,
         });
-        MODEL.update();
     }
 
     fn view(&self) -> Option<Node> {
-        Some(node!(
-            Text::new(txt!(self.state_ref().timer.get().to_string()))
-                .style("color", Color::WHITE)
-                .style("size", 48.0)
-                .style("h_alignment", HorizontalPosition::Center),
-            lay![
-                size: size_pct!(100.0),
-                direction: Direction::Column
-            ]
-        ))
+        let temperature_message = if !*WeatherAPI::get().is_loading.get() {
+            format!("Temperature: {:.2}*C", *WeatherAPI::get().temperature.get())
+        } else {
+            format!("Loading...")
+        };
+        Some(
+            node!(
+                Div::new().bg(Color::BLACK),
+                lay![
+                    size: size_pct!(100.0),
+                    direction: Direction::Column,
+                    axis_alignment: Alignment::Center,
+                    cross_alignment: Alignment::Center
+                ]
+            )
+            .push(node!(
+                Text::new(txt!(temperature_message))
+                    .style("color", Color::WHITE)
+                    .style("size", 40.0)
+                    .style("h_alignment", HorizontalPosition::Center),
+                lay![
+                    size: size!(100.0, 100.0),
+                    direction: Direction::Column
+                ]
+            ))
+            .push(node!(
+                Button::new(txt!("Fetch Weather"))
+                    .on_click(Box::new(|| {
+                        WeatherAPI::fetch();
+                        msg!(0)
+                    }))
+                    .style("color", Color::WHITE)
+                    .style("size", 48.0),
+                lay![
+                    size: size!(100.0, 50.0),
+                    direction: Direction::Column
+                ]
+            )),
+        )
     }
 
     fn update(&mut self, message: Message) -> Vec<Message> {
@@ -123,10 +119,8 @@ async fn main() {
 
 impl RootComponent<AppParams> for App {
     fn root(&mut self, w: &dyn std::any::Any, app_params: &dyn Any) {
-        println!("root initialized");
         let app_params = app_params.downcast_ref::<AppParams>().unwrap();
         self.state_mut().app_channel = app_params.app_channel.clone();
-        self.state_mut().timer = app_params.timer;
     }
 }
 
@@ -176,7 +170,6 @@ fn launch_ui(id: i32) -> anyhow::Result<()> {
             ..Default::default()
         },
         AppParams {
-            timer: &MODEL.timer,
             app_channel: Some(app_channel_tx),
         },
     );
@@ -184,10 +177,16 @@ fn launch_ui(id: i32) -> anyhow::Result<()> {
     let window_tx_2 = window_tx.clone();
 
     let window_tx_channel = window_tx.clone();
-    MODEL.timer.register_on_changed(Box::new(move || {
-        println!("Timer: {}", MODEL.timer.get());
-        let _ = window_tx_channel.send(WindowMessage::Send { message: msg!(0) });
+
+    let context_handler = context::get_static_context_handler();
+    context_handler.register_on_change(Box::new(move || {
+        println!("Context Changed");
+        window_tx_channel
+            .send(WindowMessage::Send { message: msg!(0) })
+            .unwrap();
     }));
+    context_handler.register_context(&WeatherAPI::get().temperature);
+    context_handler.register_context(&WeatherAPI::get().is_loading);
 
     let _ = handle.insert_source(app_channel_rx, move |event: Event<AppMessage>, _, app| {
         match event {

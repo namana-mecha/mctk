@@ -1,4 +1,44 @@
 use std::sync::Mutex;
+use std::sync::OnceLock;
+use std::sync::RwLock;
+
+pub fn get_static_context_handler() -> &'static ContextHandler {
+    Box::leak(Box::new(ContextHandler::new()))
+}
+
+pub struct ContextHandler {
+    on_change_callbacks: std::sync::RwLock<Vec<Box<dyn Fn() + Send + Sync>>>,
+}
+
+impl ContextHandler {
+    pub fn new() -> Self {
+        Self {
+            on_change_callbacks: vec![].into(),
+        }
+    }
+
+    pub fn register_on_change(&'static self, callback: Box<dyn Fn() + Send + Sync>) {
+        self.on_change_callbacks.write().unwrap().push(callback);
+    }
+
+    pub fn register_model() {
+        todo!()
+    }
+
+    pub fn register_context<T: Send + Sync>(&'static self, context: &'static Context<T>) {
+        context.register_on_changed(Box::new(move || {
+            for callback in self.on_change_callbacks.read().unwrap().iter() {
+                callback();
+            }
+        }));
+    }
+
+    pub fn register_contexts<T: Send + Sync>(&'static self, contexts: Vec<&'static Context<T>>) {
+        for context in contexts.iter() {
+            self.register_context(context);
+        }
+    }
+}
 
 pub struct Context<T: Send + Sync> {
     value: std::sync::RwLock<T>,

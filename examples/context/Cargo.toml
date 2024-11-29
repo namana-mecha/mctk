@@ -14,3 +14,4 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"]}
 anyhow = { version = "1.0.75", features = ["backtrace"]}
 tokio = { version = "1.33", features = ["full"] }
 lazy_static = "1.5.0"
+rand = "0.8.5"
