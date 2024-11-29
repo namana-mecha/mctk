@@ -199,8 +199,12 @@ impl Default for Style {
                 22.0.into(),
             ),
             (
-                StyleKey::new("Button", "font_size", Some("text-xxl")),
+                StyleKey::new("Button", "font_size", Some("text-2xl")),
                 24.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_size", Some("text-3xl")),
+                28.0.into(),
             ),
             (
                 StyleKey::new("Button", "font_weight", None),
@@ -639,7 +643,7 @@ impl Default for Style {
                 22.0.into(),
             ),
             (
-                StyleKey::new("TextBox", "font_size", Some("text-xxl")),
+                StyleKey::new("TextBox", "font_size", Some("text-2xl")),
                 24.0.into(),
             ),
             (
@@ -922,11 +926,8 @@ impl Default for Style {
             (StyleKey::new("Text", "size", Some("text-md")), 18.0.into()),
             (StyleKey::new("Text", "size", Some("text-l")), 20.0.into()),
             (StyleKey::new("Text", "size", Some("text-xl")), 22.0.into()),
-            (StyleKey::new("Text", "size", Some("text-xxl")), 24.0.into()),
-            (
-                StyleKey::new("Text", "size", Some("text-xxxl")),
-                28.0.into(),
-            ),
+            (StyleKey::new("Text", "size", Some("text-2xl")), 24.0.into()),
+            (StyleKey::new("Text", "size", Some("text-3xl")), 28.0.into()),
             (
                 StyleKey::new("Text", "font", Some("font-space-mono")),
                 "SpaceMono-Bold".into(),
