@@ -29,8 +29,8 @@ pub struct Instance {
     pub radius: (f32, f32, f32, f32),
     #[builder(default = "Color::TRANSPARENT")]
     pub border_color: Color,
-    #[builder(default = "0.0")]
-    pub border_size: f32,
+    #[builder(default = "(0., 0., 0., 0.)")]
+    pub border_size: (f32, f32, f32, f32),
     #[builder(default = "None")]
     pub bg_image: Option<ImageId>,
     #[builder(default = "None")]
@@ -56,7 +56,7 @@ impl Rect {
                 radius: (0., 0., 0., 0.),
                 bg_image: None,
                 border_color: Color::TRANSPARENT,
-                border_size: 0.0,
+                border_size: (0., 0., 0., 0.),
                 gradient: None,
                 composite_operation: CompositeOperation::SourceOver,
                 scissor: None,
@@ -112,10 +112,51 @@ impl Rect {
         };
         canvas.fill_path(&path, &background);
 
-        let mut paint = Paint::color(border_color.into());
-        paint.set_line_width(border_size);
+        // let mut paint = Paint::color(border_color.into());
+        // paint.set_line_width(border_size);
 
-        canvas.stroke_path(&path, &paint);
+        // canvas.stroke_path(&path, &paint);
+
+        //Add borders
+        //border top
+        if border_size.0 > 0. {
+            let mut path = Path::new();
+            path.move_to(origin.x, origin.y);
+            path.line_to(origin.x + size.width, origin.y);
+            let mut paint = Paint::color(border_color.into());
+            paint.set_line_width(border_size.0);
+            canvas.stroke_path(&path, &paint);
+        }
+
+        //border left
+        if border_size.1 > 0. {
+            let mut path = Path::new();
+            path.move_to(origin.x, origin.y);
+            path.line_to(origin.x, origin.y + size.height);
+            let mut paint = Paint::color(border_color.into());
+            paint.set_line_width(border_size.1);
+            canvas.stroke_path(&path, &paint);
+        }
+
+        //border bottom
+        if border_size.2 > 0. {
+            let mut path = Path::new();
+            path.move_to(origin.x, origin.y + size.height);
+            path.line_to(origin.x + size.width, origin.y + size.height);
+            let mut paint = Paint::color(border_color.into());
+            paint.set_line_width(border_size.2);
+            canvas.stroke_path(&path, &paint);
+        }
+
+        //border right
+        if border_size.3 > 0. {
+            let mut path = Path::new();
+            path.move_to(origin.x + size.width, origin.y);
+            path.line_to(origin.x + size.width, origin.y + size.height);
+            let mut paint = Paint::color(border_color.into());
+            paint.set_line_width(border_size.3);
+            canvas.stroke_path(&path, &paint);
+        }
 
         canvas.global_composite_operation(CompositeOperation::SourceOver);
 
@@ -161,38 +202,5 @@ impl Rect {
         //     },
         //     None => (),
         // }
-
-        // //Add borders
-        // //border top
-        // let mut path = Path::new();
-        // path.move_to(origin.x, origin.y);
-        // path.line_to(origin.x + size.width, origin.y);
-        // let mut paint = Paint::color(border_color.into());
-        // paint.set_line_width(border_size);
-        // canvas.stroke_path(&path, &paint);
-
-        // //border right
-        // let mut path = Path::new();
-        // path.move_to(origin.x + size.width, origin.y);
-        // path.line_to(origin.x + size.width, origin.y + size.height);
-        // let mut paint = Paint::color(border_color.into());
-        // paint.set_line_width(border_size);
-        // canvas.stroke_path(&path, &paint);
-
-        // //border bottom
-        // let mut path = Path::new();
-        // path.move_to(origin.x, origin.y + size.height);
-        // path.line_to(origin.x + size.width, origin.y + size.height);
-        // let mut paint = Paint::color(border_color.into());
-        // paint.set_line_width(border_size);
-        // canvas.stroke_path(&path, &paint);
-
-        // //border left
-        // let mut path = Path::new();
-        // path.move_to(origin.x, origin.y);
-        // path.line_to(origin.x, origin.y + size.height);
-        // let mut paint = Paint::color(border_color.into());
-        // paint.set_line_width(border_size);
-        // canvas.stroke_path(&path, &paint);
     }
 }

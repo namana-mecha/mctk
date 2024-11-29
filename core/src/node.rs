@@ -428,8 +428,7 @@ impl Node {
                     // } else {
                     //     prev_children.iter_mut().find(|x| x.key == child.key)
                     // }
-                    prev_children.iter_mut().find(|x| x.key == child.key)
-                    ,
+                    prev_children.iter_mut().find(|x| x.key == child.key),
                     scale_factor,
                 )
             }
