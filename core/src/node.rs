@@ -388,46 +388,47 @@ impl Node {
                 self.render_cache = self.component.render(context.clone());
 
                 // println!("render::aabb - {:?}", self.aabb);
-                if self.scrollable() {
-                    let (mut clip_start, mut clip_end) = (
-                        Box::new(node!(widgets::RoundedRect {
-                            scissor: Some(true),
-                            background_color: Color::TRANSPARENT,
-                            border_color: Color::TRANSPARENT,
-                            border_width: (0., 0., 0., 0.),
-                            radius: (0., 0., 0., 0.),
-                            swipe: 0
-                        })),
-                        Box::new(node!(widgets::RoundedRect {
-                            scissor: Some(false),
-                            background_color: Color::TRANSPARENT,
-                            border_color: Color::TRANSPARENT,
-                            border_width: (0., 0., 0., 0.),
-                            radius: (0., 0., 0., 0.),
-                            swipe: 0
-                        })),
-                    );
-                    clip_start.render_cache = clip_start.component.render(context.clone());
-                    clip_end.render_cache = clip_end.component.render(context.clone());
-                    self.clip = Some((clip_start, clip_end));
-                    // println!("clip set");
-                }
+                // if self.scrollable() {
+                //     let (mut clip_start, mut clip_end) = (
+                //         Box::new(node!(widgets::RoundedRect {
+                //             scissor: Some(true),
+                //             background_color: Color::TRANSPARENT,
+                //             border_color: Color::TRANSPARENT,
+                //             border_width: 0.,
+                //             radius: (0., 0., 0., 0.),
+                //             swipe: 0
+                //         })),
+                //         Box::new(node!(widgets::RoundedRect {
+                //             scissor: Some(false),
+                //             background_color: Color::TRANSPARENT,
+                //             border_color: Color::TRANSPARENT,
+                //             border_width: 0.,
+                //             radius: (0., 0., 0., 0.),
+                //             swipe: 0
+                //         })),
+                //     );
+                //     clip_start.render_cache = clip_start.component.render(context.clone());
+                //     clip_end.render_cache = clip_end.component.render(context.clone());
+                //     self.clip = Some((clip_start, clip_end));
+                //     // println!("clip set");
+                // }
                 ret = true;
             } else {
                 self.render_cache = prev.render_cache.take();
             }
 
-            let scrollable = self.scrollable();
+            // let scrollable = self.scrollable();
 
             let prev_children = &mut prev.children;
             for child in self.children.iter_mut() {
                 ret |= child.render(
                     caches.clone(),
-                    if scrollable {
-                        None
-                    } else {
-                        prev_children.iter_mut().find(|x| x.key == child.key)
-                    },
+                    // if scrollable {
+                    //     None
+                    // } else {
+                    //     prev_children.iter_mut().find(|x| x.key == child.key)
+                    // }
+                    prev_children.iter_mut().find(|x| x.key == child.key),
                     scale_factor,
                 )
             }

@@ -30,6 +30,9 @@ pub use carousel::{Carousel, TransitionPositions};
 mod textbox;
 pub use textbox::{TextBox, TextBoxAction, TextBoxVariant};
 
+mod scrollable;
+pub use scrollable::Scrollable;
+
 // mod slide_show;
 // pub use slide_show::SlideShow;
 

@@ -104,7 +104,6 @@ impl Component for IconButton {
         let border_width: f32 = self.style_val("border_width").unwrap().f32();
         let size: Size = self.style_val("size").unwrap().into();
         let (width, height) = size.fixed();
-        // println!("size {:?} padding {:?}", size, padding);
 
         let icon = match self.icon_type {
             IconType::Svg => node!(

@@ -98,7 +98,6 @@ impl Component for Toggle {
         let highlight_color: Color = self.style_val("highlight_color").into();
         let border_width: f32 = self.style_val("border_width").unwrap().f32();
         let active = self.state_ref().pressed;
-        println!("active is {:?}", active);
 
         let (width, height): (f64, f64) = (90., 42.);
 

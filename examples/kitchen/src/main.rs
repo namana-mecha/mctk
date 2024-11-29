@@ -9,7 +9,6 @@ use smithay_client_toolkit::shell::wlr_layer;
 use std::collections::HashMap;
 use std::time::Duration;
 use tracing_subscriber::EnvFilter;
-mod components;
 mod gui;
 mod pages;
 
@@ -44,6 +43,10 @@ async fn main() -> anyhow::Result<()> {
         "battery".to_string(),
         "src/assets/icons/battery.svg".to_string(),
     );
+    svgs.insert(
+        "back_icon".to_string(),
+        "src/assets/icons/back_icon.svg".to_string(),
+    );
 
     let namespace = "mctk.examples.kitchen".to_string();
 
@@ -73,8 +76,8 @@ async fn main() -> anyhow::Result<()> {
                 window_info,
                 window_opts,
                 fonts,
-                assets: HashMap::new(),
-                svgs: HashMap::new(),
+                assets,
+                svgs,
                 layer_shell_opts,
                 ..Default::default()
             },

@@ -109,7 +109,7 @@ impl Component for RadioButtons {
     }
 
     fn view(&self) -> Option<Node> {
-        println!("RadioButtons::view() {:?}", self.state_ref().selected);
+        // println!("RadioButtons::view() {:?}", self.state_ref().selected);
         let mut base = node!(
             super::Div::new(),
             lay![direction: match self.direction {

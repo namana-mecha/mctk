@@ -144,7 +144,7 @@ impl SlideBar {
         }
         self.state_mut().value = value;
         self.state_mut().grid = grid.clone();
-        println!("Slider::handle_on_drag() {:?}", grid);
+        // println!("Slider::handle_on_drag() {:?}", grid);
         return Some(value);
     }
 
@@ -180,17 +180,17 @@ impl Component for SlideBar {
     }
 
     fn on_drag_start(&mut self, event: &mut Event<event::DragStart>) {
-        println!("Slider::on_drag_start()");
+        // println!("Slider::on_drag_start()");
         event.stop_bubbling();
     }
 
     fn on_touch_drag_start(&mut self, event: &mut Event<event::TouchDragStart>) {
-        println!("Slider::on_touch_drag_start()");
+        // println!("Slider::on_touch_drag_start()");
         event.stop_bubbling();
     }
 
     fn on_drag(&mut self, event: &mut Event<event::Drag>) {
-        println!("Slider::on_drag() {:?}", event.relative_logical_position());
+        // println!("Slider::on_drag() {:?}", event.relative_logical_position());
         if let Some(value) = self.handle_on_drag(
             event.relative_logical_position(),
             event.current_logical_aabb(),
@@ -206,10 +206,10 @@ impl Component for SlideBar {
 
         // self.dirty = true;
 
-        println!(
-            "Slider::on_touch_drag() {:?}",
-            event.relative_logical_position_touch(),
-        );
+        // println!(
+        //     "Slider::on_touch_drag() {:?}",
+        //     event.relative_logical_position_touch(),
+        // );
         if let Some(value) = self.handle_on_drag(
             event.relative_logical_position_touch(),
             event.current_logical_aabb(),

@@ -1,28 +1,29 @@
-use mctk_core::layout::{Alignment, Direction};
+use mctk_core::layout::Alignment;
 use mctk_core::style::Styled;
-use mctk_core::widgets::{IconButton, IconType, Text, Toggle};
+use mctk_core::widgets::{IconButton, IconType, SlideBar, SlideBarType, Text};
 use mctk_core::{component::Component, node, widgets::Div, Color};
 use mctk_core::{lay, msg, rect, size, size_pct, txt};
 
 use crate::gui::Message;
 
 #[derive(Debug)]
-pub struct Toggles {}
+pub struct SlideBars {}
 
-impl Component for Toggles {
+impl Component for SlideBars {
     fn view(&self) -> Option<mctk_core::Node> {
         let mut start = node!(
             Div::new().bg(Color::LIGHT_GREY),
             lay![
                 size_pct: [100],
-                direction: Direction::Column,
+                direction: mctk_core::layout::Direction::Column,
                 padding: [20],
-                axis_alignment: Alignment::Stretch,
-                cross_alignment: Alignment::Stretch
+                axis_alignment: mctk_core::layout::Alignment::Stretch,
+                cross_alignment: mctk_core::layout::Alignment::Stretch
             ]
         );
         let title = node!(
-            Text::new(txt!("Toggle")).with_class("text-l font-bold font-space-grotesk text-black"),
+            Text::new(txt!("Slider bar"))
+                .with_class("text-l font-bold font-space-grotesk text-black"),
             lay![
                 margin:[0., 0., 8., 0.]
             ]
@@ -54,35 +55,27 @@ impl Component for Toggles {
                 Div::new().border(Color::rgba(5., 5., 5., 0.06), 1., (8., 8., 8., 8.)),
                 lay![
                     padding: [14.],
-                    direction: Direction::Column,
-                    cross_alignment: Alignment::Stretch
+                    direction: mctk_core::layout::Direction::Column,
                 ]
             )
             .push(node!(
-                Text::new(txt!("Dark")).with_class(
-                    "text-l text-md text-black leading-5 font-semibold font-space-grotesk"
-                ),
+                Text::new(txt!("Dark")).with_class("text-md font-semibold leading-5"),
                 lay![
                     margin:[0., 0., 8., 0.]
                 ]
             ))
-            .push(
-                node!(
-                    Div::new().bg(Color::BLACK),
-                    lay![
-                        cross_alignment: Alignment::Center,
-                        padding: [6]
-                    ]
-                )
-                .push(node!(
-                    Toggle::new(true).on_change(Box::new(|v| msg!(Message::Toggle { value: v }))),
-                    lay![
-                        margin:[0., 0., 0., 28.],
-                    ]
-                )),
-            ),
+            .push(node!(Div::new().bg(Color::BLACK), lay![]).push(node!(
+                SlideBar::new()
+                    .value(50)
+                    .slider_type(SlideBarType::Box)
+                    .active_color(Color::rgb(15., 168., 255.))
+                    .on_slide(Box::new(|value| msg!(Message::SlideBar { value })))
+                    .col_spacing(7.75)
+                    .row_spacing(7.75)
+                    .col_width(4.),
+                lay![size: [410, 46], margin:[10., 0., 0., 0.]]
+            ))),
         );
-
         Some(start)
     }
 }

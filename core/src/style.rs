@@ -6,8 +6,8 @@ use std::sync::{Mutex, OnceLock};
 
 use cosmic_text::Weight;
 
-use crate::layout::*;
 use crate::types::*;
+use crate::{layout::*, size};
 
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct BorderWidth {
@@ -41,15 +41,6 @@ impl Default for HorizontalPosition {
     fn default() -> Self {
         Self::Right
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum IconButtonSize {
-    Xs,
-    Sm,
-    Md,
-    Xl,
-    XXl,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -166,10 +157,106 @@ impl Default for Style {
                 StyleKey::new("Button", "text_color", None),
                 Color::BLACK.into(),
             ),
+            (
+                StyleKey::new("Button", "text_color", Some("text-black")),
+                Color::BLACK.into(),
+            ),
+            (
+                StyleKey::new("Button", "text_color", Some("text-white")),
+                Color::WHITE.into(),
+            ),
+            (
+                StyleKey::new("Button", "text_color", Some("text-blue")),
+                Color::BLUE.into(),
+            ),
+            (
+                StyleKey::new("Button", "font", Some("font-space-mono")),
+                "SpaceMono-Bold".into(),
+            ),
+            (
+                StyleKey::new("Button", "font", Some("font-space-grotesk")),
+                "Space Grotesk".into(),
+            ),
             (StyleKey::new("Button", "font_size", None), 12.0.into()),
+            (
+                StyleKey::new("Button", "font_size", Some("text-xs")),
+                14.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_size", Some("text-sm")),
+                16.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_size", Some("text-md")),
+                18.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_size", Some("text-l")),
+                20.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_size", Some("text-xl")),
+                22.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_size", Some("text-xxl")),
+                24.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_weight", None),
+                FontWeight::Normal.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_weight", Some("font-thin")),
+                FontWeight::Thin.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_weight", Some("font-extralight")),
+                FontWeight::ExtraLight.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_weight", Some("font-light")),
+                FontWeight::Light.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_weight", Some("font-normal")),
+                FontWeight::Normal.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_weight", Some("font-medium")),
+                FontWeight::Medium.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_weight", Some("font-semibold")),
+                FontWeight::Semibold.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_weight", Some("font-bold")),
+                FontWeight::Bold.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_weight", Some("font-extrabold")),
+                FontWeight::ExtraBold.into(),
+            ),
+            (
+                StyleKey::new("Button", "font_weight", Some("font-black")),
+                FontWeight::Black.into(),
+            ),
             (
                 StyleKey::new("Button", "background_color", None),
                 Color::WHITE.into(),
+            ),
+            (
+                StyleKey::new("Button", "background_color", Some("bg-black")),
+                Color::BLACK.into(),
+            ),
+            (
+                StyleKey::new("Button", "background_color", Some("bg-white")),
+                Color::WHITE.into(),
+            ),
+            (
+                StyleKey::new("Button", "background_color", Some("bg-transparent")),
+                Color::TRANSPARENT.into(),
             ),
             (
                 StyleKey::new("Button", "highlight_color", None),
@@ -183,17 +270,133 @@ impl Default for Style {
                 StyleKey::new("Button", "border_color", None),
                 Color::BLACK.into(),
             ),
-            (StyleKey::new("Button", "border_width", None), 2.0.into()),
-            (StyleKey::new("Button", "radius", None), 4.0.into()),
+            (StyleKey::new("Button", "border_width", None), 0.0.into()),
+            (
+                StyleKey::new("Button", "border_width", Some("border-0")),
+                0.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "border_width", Some("border")),
+                1.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "border_width", Some("border-2")),
+                2.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "border_width", Some("border-4")),
+                4.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "border_width", Some("border-8")),
+                8.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "border_width", Some("border-16")),
+                16.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "border_width", Some("border-0")),
+                0.0.into(),
+            ),
+            (StyleKey::new("Button", "radius", None), 0.0.into()),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-sm")),
+                2.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded")),
+                4.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-md")),
+                6.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-lg")),
+                8.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-xl")),
+                12.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-2xl")),
+                16.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-3xl")),
+                24.0.into(),
+            ),
             (StyleKey::new("Button", "padding", None), 2.0.into()),
             (
                 StyleKey::new("Button", "h_alignment", None),
                 HorizontalPosition::Center.into(),
             ),
+            (
+                StyleKey::new("Button", "line_height", Some("leading-3")),
+                12.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "line_height", Some("leading-4")),
+                16.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "line_height", Some("leading-5")),
+                20.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "line_height", Some("leading-6")),
+                24.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "line_height", Some("leading-7")),
+                28.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "line_height", Some("leading-8")),
+                32.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "line_height", Some("leading-9")),
+                36.0.into(),
+            ),
+            (
+                StyleKey::new("Button", "line_height", Some("leading-10")),
+                40.0.into(),
+            ),
+            (StyleKey::new("Button", "padding", Some("p-0")), 0.0.into()),
+            (StyleKey::new("Button", "padding", Some("p-1")), 4.0.into()),
+            (StyleKey::new("Button", "padding", Some("p-2")), 8.0.into()),
+            (StyleKey::new("Button", "padding", Some("p-3")), 12.0.into()),
+            (StyleKey::new("Button", "padding", Some("p-4")), 16.0.into()),
+            (StyleKey::new("Button", "padding", Some("p-5")), 20.0.into()),
+            (StyleKey::new("Button", "padding", Some("p-6")), 24.0.into()),
+            (StyleKey::new("Button", "padding", Some("p-7")), 28.0.into()),
             // IconButton
             (
                 StyleKey::new("IconButton", "size", None),
-                IconButtonSize::Sm.into(),
+                size!(18., 18.).into(),
+            ),
+            (
+                StyleKey::new("IconButton", "size", Some("btn-xs")),
+                size!(18., 18.).into(),
+            ),
+            (
+                StyleKey::new("IconButton", "size", Some("btn-sm")),
+                size!(24.).into(),
+            ),
+            (
+                StyleKey::new("IconButton", "size", Some("btn-md")),
+                size!(32.).into(),
+            ),
+            (
+                StyleKey::new("IconButton", "size", Some("btn-xl")),
+                size!(48.0).into(),
+            ),
+            (
+                StyleKey::new("IconButton", "size", Some("btn-xxl")),
+                size!(88.).into(),
             ),
             (
                 StyleKey::new("IconButton", "text_color", None),
@@ -209,6 +412,14 @@ impl Default for Style {
                 Color::DARK_GREY.into(),
             ),
             (
+                StyleKey::new("IconButton", "background_color", Some("bg-white")),
+                Color::WHITE.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "background_color", Some("bg-transparent")),
+                Color::TRANSPARENT.into(),
+            ),
+            (
                 StyleKey::new("IconButton", "highlight_color", None),
                 Color::LIGHT_GREY.into(),
             ),
@@ -222,9 +433,97 @@ impl Default for Style {
             ),
             (
                 StyleKey::new("IconButton", "border_width", None),
+                0.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "border_width", Some("border-0")),
+                0.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "border_width", Some("border")),
+                1.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "border_width", Some("border-2")),
                 2.0.into(),
             ),
+            (
+                StyleKey::new("IconButton", "border_width", Some("border-4")),
+                4.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "border_width", Some("border-8")),
+                8.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "border_width", Some("border-16")),
+                16.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "border_width", Some("border-0")),
+                0.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "padding", Some("p-0")),
+                0.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "padding", Some("p-1")),
+                4.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "padding", Some("p-2")),
+                8.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "padding", Some("p-3")),
+                12.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "padding", Some("p-4")),
+                16.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "padding", Some("p-5")),
+                20.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "padding", Some("p-6")),
+                24.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "padding", Some("p-7")),
+                28.0.into(),
+            ),
             (StyleKey::new("IconButton", "radius", None), 0.0.into()),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-sm")),
+                2.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded")),
+                4.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-md")),
+                6.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-lg")),
+                8.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-xl")),
+                12.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-2xl")),
+                16.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "radius", Some("rounded-3xl")),
+                24.0.into(),
+            ),
             (StyleKey::new("IconButton", "padding", None), 10.0.into()),
             // RadioButton
             (
@@ -368,11 +667,19 @@ impl Default for Style {
                 Color::WHITE.into(),
             ),
             (
+                StyleKey::new("TextBox", "background_color", Some("bg-transparent")),
+                Color::TRANSPARENT.into(),
+            ),
+            (
                 StyleKey::new("TextBox", "selection_color", None),
                 Color::MID_GREY.into(),
             ),
             (
                 StyleKey::new("TextBox", "cursor_color", None),
+                Color::WHITE.into(),
+            ),
+            (
+                StyleKey::new("TextBox", "cursor_color", Some("light")),
                 Color::BLACK.into(),
             ),
             (
@@ -386,8 +693,220 @@ impl Default for Style {
             (
                 StyleKey::new("TextBox", "border_width", None),
                 BorderWidth {
+                    top: 1.,
+                    left: 1.,
+                    bottom: 1.,
+                    right: 1.,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-0")),
+                BorderWidth {
+                    top: 0.0,
+                    left: 0.0,
+                    bottom: 0.0,
+                    right: 0.0,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border")),
+                BorderWidth {
+                    top: 1.0,
+                    left: 1.0,
+                    bottom: 1.0,
+                    right: 1.0,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-2")),
+                BorderWidth {
+                    top: 2.0,
+                    left: 2.0,
+                    bottom: 2.0,
+                    right: 2.0,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-4")),
+                BorderWidth {
+                    top: 4.0,
+                    left: 4.0,
+                    bottom: 4.0,
+                    right: 4.0,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-8")),
+                BorderWidth {
+                    top: 8.0,
+                    left: 8.0,
+                    bottom: 8.0,
+                    right: 8.0,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-x-0")),
+                BorderWidth {
+                    left: 0.0,
+                    right: 0.0,
                     top: 1.5,
-                    ..Default::default()
+                    bottom: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-x-2")),
+                BorderWidth {
+                    left: 2.0,
+                    right: 2.0,
+                    top: 1.5,
+                    bottom: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-x-4")),
+                BorderWidth {
+                    left: 4.0,
+                    right: 4.0,
+                    top: 1.5,
+                    bottom: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-x-8")),
+                BorderWidth {
+                    left: 8.0,
+                    right: 8.0,
+                    top: 1.5,
+                    bottom: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-y-0")),
+                BorderWidth {
+                    top: 0.0,
+                    bottom: 0.0,
+                    left: 1.5,
+                    right: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-y-2")),
+                BorderWidth {
+                    top: 2.0,
+                    bottom: 2.0,
+                    left: 1.5,
+                    right: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-y-4")),
+                BorderWidth {
+                    top: 4.0,
+                    bottom: 4.0,
+                    left: 1.5,
+                    right: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-y-8")),
+                BorderWidth {
+                    top: 8.0,
+                    bottom: 8.0,
+                    left: 1.5,
+                    right: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-t-0")),
+                BorderWidth {
+                    top: 0.0,
+                    left: 1.5,
+                    right: 1.5,
+                    bottom: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-t-2")),
+                BorderWidth {
+                    top: 2.0,
+                    left: 1.5,
+                    right: 1.5,
+                    bottom: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-b-0")),
+                BorderWidth {
+                    bottom: 0.0,
+                    top: 1.5,
+                    left: 1.5,
+                    right: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-b-2")),
+                BorderWidth {
+                    bottom: 2.0,
+                    top: 1.5,
+                    left: 1.5,
+                    right: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-l-0")),
+                BorderWidth {
+                    left: 0.0,
+                    top: 1.5,
+                    right: 1.5,
+                    bottom: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-l-2")),
+                BorderWidth {
+                    left: 2.0,
+                    top: 1.5,
+                    right: 1.5,
+                    bottom: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-r-0")),
+                BorderWidth {
+                    right: 0.0,
+                    top: 1.5,
+                    left: 1.5,
+                    bottom: 1.5,
+                }
+                .into(),
+            ),
+            (
+                StyleKey::new("TextBox", "border_width", Some("border-r-2")),
+                BorderWidth {
+                    right: 2.0,
+                    top: 1.5,
+                    left: 1.5,
+                    bottom: 1.5,
                 }
                 .into(),
             ),
@@ -405,8 +924,56 @@ impl Default for Style {
             (StyleKey::new("Text", "size", Some("text-xl")), 22.0.into()),
             (StyleKey::new("Text", "size", Some("text-xxl")), 24.0.into()),
             (
+                StyleKey::new("Text", "size", Some("text-xxxl")),
+                28.0.into(),
+            ),
+            (
+                StyleKey::new("Text", "font", Some("font-space-mono")),
+                "SpaceMono-Bold".into(),
+            ),
+            (
+                StyleKey::new("Text", "font", Some("font-space-grotesk")),
+                "Space Grotesk".into(),
+            ),
+            (
                 StyleKey::new("Text", "font_weight", None),
                 FontWeight::Normal.into(),
+            ),
+            (
+                StyleKey::new("Text", "font_weight", Some("font-thin")),
+                FontWeight::Thin.into(),
+            ),
+            (
+                StyleKey::new("Text", "font_weight", Some("font-extralight")),
+                FontWeight::ExtraLight.into(),
+            ),
+            (
+                StyleKey::new("Text", "font_weight", Some("font-light")),
+                FontWeight::Light.into(),
+            ),
+            (
+                StyleKey::new("Text", "font_weight", Some("font-normal")),
+                FontWeight::Normal.into(),
+            ),
+            (
+                StyleKey::new("Text", "font_weight", Some("font-medium")),
+                FontWeight::Medium.into(),
+            ),
+            (
+                StyleKey::new("Text", "font_weight", Some("font-semibold")),
+                FontWeight::Semibold.into(),
+            ),
+            (
+                StyleKey::new("Text", "font_weight", Some("font-bold")),
+                FontWeight::Bold.into(),
+            ),
+            (
+                StyleKey::new("Text", "font_weight", Some("font-extrabold")),
+                FontWeight::ExtraBold.into(),
+            ),
+            (
+                StyleKey::new("Text", "font_weight", Some("font-black")),
+                FontWeight::Black.into(),
             ),
             (StyleKey::new("Text", "color", None), Color::BLACK.into()),
             (
@@ -414,8 +981,76 @@ impl Default for Style {
                 Color::WHITE.into(),
             ),
             (
+                StyleKey::new("Text", "color", Some("text-black")),
+                Color::BLACK.into(),
+            ),
+            (
+                StyleKey::new("Text", "color", Some("text-white")),
+                Color::WHITE.into(),
+            ),
+            (
+                StyleKey::new("Text", "color", Some("text-blue")),
+                Color::BLUE.into(),
+            ),
+            (
                 StyleKey::new("Text", "h_alignment", None),
                 HorizontalPosition::Left.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-3")),
+                12.0.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-4")),
+                16.0.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-5")),
+                20.0.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-6")),
+                24.0.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-7")),
+                28.0.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-8")),
+                32.0.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-9")),
+                36.0.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-10")),
+                40.0.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-none")),
+                1.0.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-tight")),
+                1.25.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-snug")),
+                1.375.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-normal")),
+                1.5.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-relaxed")),
+                1.625.into(),
+            ),
+            (
+                StyleKey::new("Text", "line_height", Some("leading-loose")),
+                2.0.into(),
             ),
             // Scroll
             (StyleKey::new("Scroll", "x", None), false.into()),
@@ -587,33 +1222,6 @@ impl From<Option<StyleVal>> for BorderWidth {
         match v {
             Some(StyleVal::BorderWidth(c)) => c,
             x => panic!("Tried to coerce {x:?} into a border width"),
-        }
-    }
-}
-
-impl From<IconButtonSize> for StyleVal {
-    fn from(s: IconButtonSize) -> Self {
-        match s {
-            IconButtonSize::Xs => Self::Size(Size {
-                width: Dimension::Px(18.),
-                height: Dimension::Px(18.),
-            }),
-            IconButtonSize::Sm => Self::Size(Size {
-                width: Dimension::Px(24.),
-                height: Dimension::Px(24.),
-            }),
-            IconButtonSize::Md => Self::Size(Size {
-                width: Dimension::Px(32.),
-                height: Dimension::Px(32.),
-            }),
-            IconButtonSize::Xl => Self::Size(Size {
-                width: Dimension::Px(48.),
-                height: Dimension::Px(48.),
-            }),
-            IconButtonSize::XXl => Self::Size(Size {
-                width: Dimension::Px(88.),
-                height: Dimension::Px(88.),
-            }),
         }
     }
 }
