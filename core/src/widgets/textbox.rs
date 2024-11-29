@@ -12,7 +12,7 @@ use crate::renderables::{
     rect::InstanceBuilder as RectInstanceBuilder, text::InstanceBuilder as TextInstanceBuilder,
 };
 use crate::renderables::{Rect, Renderable, Text};
-use crate::style::{HorizontalPosition, Styled};
+use crate::style::{BorderWidth, HorizontalPosition, Styled};
 use crate::{event, lay, msg, node, rect, size, size_pct, types::*, Node};
 use cosmic_text::LayoutGlyph;
 use femtovg::Align;
@@ -127,17 +127,18 @@ impl Component for TextBox {
     fn view(&self) -> Option<Node> {
         let background_color: Color = self.style_val("background_color").into();
         let border_color: Color = self.style_val("border_color").into();
-        let border_width: f32 = self.style_val("border_width").unwrap().f32();
+        let border_width: BorderWidth = self.style_val("border_width").unwrap().into();
 
         let mut textbox_node = node!(
             TextBoxContainer::new(
                 background_color,
                 border_color,
-                border_width * if self.state_ref().focused { 2.0 } else { 1.0 },
+                (border_width.top, border_width.left, border_width.bottom, border_width.right)
             ),
             lay![
                 size: size_pct!(100.0),
-                cross_alignment: crate::layout::Alignment::Center
+                cross_alignment: crate::layout::Alignment::Center,
+                // padding: [10.]
             ]
         )
         .push(node!(
@@ -220,11 +221,11 @@ struct TextBoxContainerState {
 struct TextBoxContainer {
     background_color: Color,
     border_color: Color,
-    border_width: f32,
+    border_width: (f32, f32, f32, f32),
 }
 
 impl TextBoxContainer {
-    fn new<C: Into<Color>>(background_color: C, border_color: C, border_width: f32) -> Self {
+    fn new<C: Into<Color>>(background_color: C, border_color: C, border_width: (f32, f32, f32, f32)) -> Self {
         Self {
             background_color: background_color.into(),
             border_color: border_color.into(),
@@ -235,7 +236,7 @@ impl TextBoxContainer {
     }
 
     fn border_width_px(&self, scale_factor: f32) -> f32 {
-        (self.border_width * scale_factor.floor()).round()
+        (self.border_width.0 * scale_factor.floor()).round()
     }
 }
 
@@ -285,7 +286,7 @@ impl Component for TextBoxContainer {
     fn render_hash(&self, hasher: &mut ComponentHasher) {
         self.background_color.hash(hasher);
         self.border_color.hash(hasher);
-        (self.border_width as u32).hash(hasher);
+        (self.border_width.0 as u32).hash(hasher);
     }
 
     fn scroll_position(&self) -> Option<ScrollPosition> {
@@ -307,7 +308,7 @@ impl Component for TextBoxContainer {
                     z: 0.5,
                 }))
                 .scale(context.aabb.size() - Scale::new(border_width * 2.0, border_width * 2.0))
-                .border_size(border_width)
+                .border_size(self.border_width)
                 .border_color(self.border_color)
                 .color(self.background_color)
                 .build()
@@ -814,7 +815,7 @@ impl Component for TextBoxText {
     ) -> (Option<f32>, Option<f32>) {
         let padding: f32 = self.style_val("padding").unwrap().f32();
         let font_size: f32 = self.style_val("font_size").unwrap().f32();
-        let border_width: f32 = self.style_val("border_width").unwrap().f32();
+        let border_width: BorderWidth = self.style_val("border_width").unwrap().into();
         let font = self.style_val("font").map(|p| p.str().to_string());
         let is_placeholder = self.state_ref().text.len() == 0 && self.placeholder.is_some();
         let text = if is_placeholder {
@@ -844,7 +845,7 @@ impl Component for TextBoxText {
             // println!("glyph_widths are {:?}", glyph_widths);
             self.state_mut().glyph_widths = glyph_widths;
             self.state_mut().glyphs = glyphs;
-            self.state_mut().padding_offset_px = ((padding + border_width) * scale_factor).round();
+            self.state_mut().padding_offset_px = ((padding + border_width.left) * scale_factor).round();
             self.state_mut().dirty = false;
         }
 
@@ -855,7 +856,7 @@ impl Component for TextBoxText {
         } + self.state_ref().padding_offset_px * 2.0;
         (
             Some(width / scale_factor),
-            Some(t_h.unwrap_or_default() + padding * 2.0 + border_width * 2.0),
+            Some(t_h.unwrap_or_default() + padding * 2.0 + border_width.left * 2.0),
         )
     }
 

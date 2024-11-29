@@ -1,12 +1,12 @@
 use std::hash::{Hash, Hasher};
 use std::ops::Neg;
 
+use super::{Div, RoundedRect};
 use crate::component::Component;
 use crate::layout::{Direction, PositionType, ScrollPosition};
-use super::{Div, RoundedRect};
-use crate::{lay, size, rect};
-use crate::{node, node::Node};
 use crate::types::*;
+use crate::{lay, rect, size};
+use crate::{node, node::Node};
 use mctk_macros::{component, state_component_impl};
 
 #[derive(Debug, Default)]
@@ -17,7 +17,7 @@ pub struct ScrollableState {
     //Position of scrollable when drag was started
     drag_start_position: Point,
 
-    aabb: Option<AABB>
+    aabb: Option<AABB>,
 }
 
 #[component(State = "ScrollableState", Styled, Internal)]
@@ -51,7 +51,10 @@ impl Component for Scrollable {
         self.state_mut().drag_start_position = drag_start;
     }
 
-    fn on_touch_drag_start(&mut self, event: &mut crate::event::Event<crate::event::TouchDragStart>) {
+    fn on_touch_drag_start(
+        &mut self,
+        event: &mut crate::event::Event<crate::event::TouchDragStart>,
+    ) {
         event.stop_bubbling();
         //Current scroll position will become drag start position when drag is started
         let drag_start = self.state_ref().scroll_position;
@@ -76,20 +79,20 @@ impl Component for Scrollable {
     }
 
     fn on_touch_drag(&mut self, event: &mut crate::event::Event<crate::event::TouchDrag>) {
-         //on drag we will update scroll position
-         let start_position = self.state_ref().drag_start_position;
-         let size = event.current_physical_aabb().size();
-         let inner_scale = event.current_inner_scale().unwrap();
-         let mut scroll_position = self.state_ref().scroll_position;
-         let drag = event.physical_delta().y.neg();
-         let delta_position = drag * (inner_scale.height / size.height);
-         let max_position = inner_scale.height - size.height;
-         scroll_position.y = (start_position.y + delta_position)
-             .round()
-             .min(max_position)
-             .max(0.0);
-         self.state_mut().scroll_position = scroll_position;
-         // println!("scroll_position {:?}", scroll_position);
+        //on drag we will update scroll position
+        let start_position = self.state_ref().drag_start_position;
+        let size = event.current_physical_aabb().size();
+        let inner_scale = event.current_inner_scale().unwrap();
+        let mut scroll_position = self.state_ref().scroll_position;
+        let drag = event.physical_delta().y.neg();
+        let delta_position = drag * (inner_scale.height / size.height);
+        let max_position = inner_scale.height - size.height;
+        scroll_position.y = (start_position.y + delta_position)
+            .round()
+            .min(max_position)
+            .max(0.0);
+        self.state_mut().scroll_position = scroll_position;
+        // println!("scroll_position {:?}", scroll_position);
     }
 
     fn container(&self) -> Option<Vec<usize>> {
@@ -98,10 +101,10 @@ impl Component for Scrollable {
 
     fn scroll_position(&self) -> Option<ScrollPosition> {
         let p = self.state_ref().scroll_position;
-            Some(ScrollPosition {
-                x:  None ,
-                y: Some(p.y),
-            })
+        Some(ScrollPosition {
+            x: None,
+            y: Some(p.y),
+        })
     }
 
     fn full_control(&self) -> bool {
@@ -109,13 +112,13 @@ impl Component for Scrollable {
     }
 
     fn set_aabb(
-            &mut self,
-            aabb: &mut AABB,
-            _parent_aabb: AABB,
-            _children: Vec<(&mut AABB, Option<Scale>, Option<Point>)>,
-            _frame: AABB,
-            _scale_factor: f32,
-        ) {
+        &mut self,
+        aabb: &mut AABB,
+        _parent_aabb: AABB,
+        _children: Vec<(&mut AABB, Option<Scale>, Option<Point>)>,
+        _frame: AABB,
+        _scale_factor: f32,
+    ) {
         if self.state.is_some() {
             if self.state_ref().aabb != Some(aabb.clone()) {
                 self.state_mut().aabb = Some(aabb.clone());
@@ -124,7 +127,7 @@ impl Component for Scrollable {
     }
 
     fn view(&self) -> Option<Node> {
-        let size =  if let Some(aabb) = self.state_ref().aabb {
+        let size = if let Some(aabb) = self.state_ref().aabb {
             aabb.size()
         } else {
             Scale::new(1., 1.)
@@ -144,7 +147,7 @@ impl Component for Scrollable {
                     scissor: Some(false),
                     background_color: Color::TRANSPARENT,
                     border_color: Color::TRANSPARENT,
-                    border_width: 0.,
+                    border_width: (0., 0., 0., 0.),
                     radius: (0., 0., 0., 0.),
                     swipe: 0
                 },
@@ -155,9 +158,9 @@ impl Component for Scrollable {
                 ]
             ))
             .push(node!(
-                Div::new().bg(Color::YELLOW),
+                Div::new(),
                 lay![
-                    direction: Direction::Column
+                    direction: Direction::Column,
                 ]
             ))
             .push(node!(
@@ -165,7 +168,7 @@ impl Component for Scrollable {
                     scissor: Some(true),
                     background_color: Color::TRANSPARENT,
                     border_color: Color::TRANSPARENT,
-                    border_width: 0.,
+                    border_width: (0., 0., 0., 0.),
                     radius: (0., 0., 0., 0.),
                     swipe: 0
                 },

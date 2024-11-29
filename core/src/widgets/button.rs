@@ -97,7 +97,7 @@ impl Component for Button {
                     background_color
                 },
                 border_color,
-                border_width,
+                border_width: (border_width, border_width, border_width, border_width),
                 radius: (radius, radius, radius, radius),
                 ..Default::default()
             },

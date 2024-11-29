@@ -256,6 +256,10 @@ impl Size {
             height: self.height + rect.top + rect.bottom,
         }
     }
+
+    pub fn fixed(&self) -> (f64, f64) {
+        (self.width.into(), self.height.into())
+    }
 }
 
 impl From<ScrollPosition> for Size {
