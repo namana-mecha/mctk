@@ -1,4 +1,5 @@
 mod contexts;
+use mctk_core::context::Model;
 use mctk_core::layout::Alignment;
 use mctk_core::prelude::*;
 use mctk_core::reexports::smithay_client_toolkit::{
@@ -185,8 +186,7 @@ fn launch_ui(id: i32) -> anyhow::Result<()> {
             .send(WindowMessage::Send { message: msg!(0) })
             .unwrap();
     }));
-    context_handler.register_context(&WeatherAPI::get().temperature);
-    context_handler.register_context(&WeatherAPI::get().is_loading);
+    WeatherAPI::get().register_context_handler(context_handler);
 
     let _ = handle.insert_source(app_channel_rx, move |event: Event<AppMessage>, _, app| {
         match event {

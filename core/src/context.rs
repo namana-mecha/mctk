@@ -1,6 +1,8 @@
 use std::sync::Mutex;
-use std::sync::OnceLock;
-use std::sync::RwLock;
+
+pub trait Model {
+    fn register_context_handler(&'static self, context_handler: &'static ContextHandler);
+}
 
 pub fn get_static_context_handler() -> &'static ContextHandler {
     Box::leak(Box::new(ContextHandler::new()))
@@ -21,12 +23,8 @@ impl ContextHandler {
         self.on_change_callbacks.write().unwrap().push(callback);
     }
 
-    pub fn register_model() {
-        todo!()
-    }
-
     pub fn register_context<T: Send + Sync>(&'static self, context: &'static Context<T>) {
-        context.register_on_changed(Box::new(move || {
+        context.register_on_change(Box::new(move || {
             for callback in self.on_change_callbacks.read().unwrap().iter() {
                 callback();
             }
@@ -73,7 +71,7 @@ impl<T: Send + Sync> Context<T> {
         }
     }
 
-    pub fn register_on_changed(&self, callback: Box<dyn Fn() + Send + Sync>) {
+    pub fn register_on_change(&self, callback: Box<dyn Fn() + Send + Sync>) {
         self.callbacks.lock().unwrap().push(callback);
     }
 }

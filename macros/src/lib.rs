@@ -204,3 +204,40 @@ pub fn static_id(_item: TokenStream) -> TokenStream {
     let id = ID_COUNTER.inc();
     quote! { #id }.into()
 }
+
+#[proc_macro_derive(Model)]
+pub fn model_derive(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as syn::DeriveInput);
+    let struct_name = &input.ident;
+    let fields = if let syn::Data::Struct(s) = &input.data {
+        if let syn::Fields::Named(f) = &s.fields {
+            f
+        } else {
+            panic!("Model derive only works on structs with named fields");
+        }
+    } else {
+        panic!("Model derive only works on structs");
+    };
+
+    let mut field_names = Vec::new();
+    for field in fields.named.iter() {
+        let field_name = field.ident.as_ref().unwrap();
+        let field_type = &field.ty;
+        let field_type_str = quote! { #field_type }.to_string();
+        if field_type_str.starts_with("Context") {
+            field_names.push(field_name);
+        }
+    }
+
+    let expanded = quote! {
+        impl mctk_core::context::Model for #struct_name {
+            fn register_context_handler(&'static self, context_handler: &'static mctk_core::context::ContextHandler) {
+                #(
+                    context_handler.register_context(&self.#field_names);
+                )*
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
