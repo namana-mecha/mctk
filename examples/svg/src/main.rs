@@ -1,10 +1,4 @@
-use mctk_core::component::{Component, Message, RootComponent};
-use mctk_core::layout::Alignment;
-use mctk_core::reexports::cosmic_text;
-use mctk_core::widgets::{self, Svg};
-use mctk_core::{lay, size, size_pct, AssetParams, Color};
-use mctk_core::{node, node::Node};
-use mctk_macros::{component, state_component_impl};
+use mctk_core::prelude::*;
 use mctk_smithay::layer_shell::layer_surface::LayerOptions;
 use mctk_smithay::layer_shell::layer_window;
 use mctk_smithay::layer_shell::layer_window::LayerWindowParams;

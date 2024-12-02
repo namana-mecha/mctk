@@ -1,4 +1,5 @@
 pub mod component;
+pub mod context;
 pub mod event;
 pub mod font_cache;
 pub mod instrumenting;
@@ -11,11 +12,11 @@ pub mod ui;
 pub mod window;
 
 pub mod reexports {
+    pub use cosmic_text;
     pub use euclid;
     pub use femtovg;
     pub use glutin;
     pub use resource;
-    pub use cosmic_text;
     pub use smithay_client_toolkit;
 }
 
@@ -41,3 +42,15 @@ pub use node::*;
 
 pub mod input;
 pub use input::*;
+
+pub mod prelude {
+    pub use crate::component::*;
+    pub use crate::layout::*;
+    pub use crate::reexports::*;
+    pub use crate::style::*;
+    pub use crate::widgets::{
+        Button, Carousel, Div, IconButton, IconType, Image, RoundedRect, Slider, Svg, TextBox,
+        TextBoxAction, TextBoxVariant, TransitionPositions,
+    };
+    pub use crate::*;
+}

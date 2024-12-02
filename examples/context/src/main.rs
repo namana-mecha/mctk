@@ -1,10 +1,12 @@
-use anyhow::Error;
+mod contexts;
+use mctk_core::context::Model;
+use mctk_core::layout::Alignment;
 use mctk_core::prelude::*;
 use mctk_core::reexports::smithay_client_toolkit::{
     reexports::calloop::{self, channel::Event},
     shell::wlr_layer,
 };
-use mctk_core::renderables::Renderable;
+use mctk_core::widgets::Text;
 use mctk_smithay::layer_shell::layer_surface::LayerOptions;
 use mctk_smithay::layer_shell::layer_window::{LayerWindow, LayerWindowParams};
 use mctk_smithay::xdg_shell::xdg_window::{self, XdgWindowMessage, XdgWindowParams};
@@ -12,39 +14,38 @@ use mctk_smithay::{WindowInfo, WindowMessage, WindowOptions};
 use smithay_client_toolkit::reexports::calloop::channel::Sender;
 use std::any::Any;
 use std::collections::HashMap;
-use std::time::Duration;
-use tokio::time;
+use std::fmt::Debug;
 
-// App level channel
+use crate::contexts::weather_api::WeatherAPI;
+
 #[derive(Debug)]
 pub enum AppMessage {
     Exit,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AppParams {
     app_channel: Option<calloop::channel::Sender<AppMessage>>,
 }
 
-#[derive(Debug, Default)]
 pub struct AppState {
-    value: f32,
-    btn_pressed: bool,
     window_sender: Option<Sender<XdgWindowMessage>>,
     app_channel: Option<Sender<AppMessage>>,
 }
 
-#[derive(Debug, Clone)]
-enum HelloEvent {
-    ButtonPressed {
-        name: String,
-    },
-    TextBox {
-        name: String,
-        value: String,
-        update_type: String,
-    },
-    Exit,
+impl Default for AppState {
+    fn default() -> Self {
+        AppState {
+            window_sender: None,
+            app_channel: None,
+        }
+    }
+}
+
+impl Debug for AppState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AppState").finish()
+    }
 }
 
 #[component(State = "AppState")]
@@ -55,64 +56,55 @@ pub struct App {}
 impl Component for App {
     fn init(&mut self) {
         self.state = Some(AppState {
-            value: 30.,
-            btn_pressed: false,
             window_sender: None,
             app_channel: None,
-        })
+        });
     }
-
-    fn render(&mut self, context: RenderContext) -> Option<Vec<Renderable>> {
-        None
-    }
-
-    // fn on_tick(&mut self, _event: &mut mctk_core::event::Event<mctk_core::event::Tick>) {
-    //     let value = self.state_ref().value;
-    //     self.state_mut().value = value + 1.;
-    // }
 
     fn view(&self) -> Option<Node> {
-        let btn_pressed = self.state_ref().btn_pressed;
-        let value = self.state_ref().value;
-
-        println!("value is {:?}", value);
-
+        let temperature_message = if !*WeatherAPI::get().is_loading.get() {
+            format!("Temperature: {:.2}*C", *WeatherAPI::get().temperature.get())
+        } else {
+            format!("Loading...")
+        };
         Some(
             node!(
-                Div::new().bg(Color::rgb(255., 0., 0.)),
+                Div::new().bg(Color::BLACK),
                 lay![
                     size: size_pct!(100.0),
-                    direction: Direction::Column
+                    direction: Direction::Column,
+                    axis_alignment: Alignment::Center,
+                    cross_alignment: Alignment::Center
                 ]
             )
             .push(node!(
-                Button::new(txt!("Click"))
-                    .on_click(Box::new(|| msg!(HelloEvent::Exit)))
-                    .on_double_click(Box::new(|| msg!(HelloEvent::ButtonPressed {
-                        name: "Double clicked".to_string()
-                    })))
-                    .style("color", Color::rgb(255., 0., 0.))
-                    .style("background_color", Color::rgb(value % 255., 255., 255.))
-                    .style("active_color", Color::rgb(200., 200., 200.))
-                    .style("font_size", 24.0),
-                lay![size: size!(180.0, 180.0), margin: [0., 0., 20., 0.]]
+                Text::new(txt!(temperature_message))
+                    .style("color", Color::WHITE)
+                    .style("size", 40.0)
+                    .style("h_alignment", HorizontalPosition::Center),
+                lay![
+                    size: size!(100.0, 100.0),
+                    direction: Direction::Column
+                ]
+            ))
+            .push(node!(
+                Button::new(txt!("Fetch Weather"))
+                    .on_click(Box::new(|| {
+                        WeatherAPI::fetch();
+                        msg!(0)
+                    }))
+                    .style("color", Color::WHITE)
+                    .style("size", 48.0),
+                lay![
+                    size: size!(100.0, 50.0),
+                    direction: Direction::Column
+                ]
             )),
         )
     }
 
     fn update(&mut self, message: Message) -> Vec<Message> {
-        println!("App has sent: {:?}", message.downcast_ref::<HelloEvent>());
-        match message.downcast_ref::<HelloEvent>() {
-            Some(HelloEvent::ButtonPressed { name }) => {
-                println!("{}", name);
-                self.state_mut().btn_pressed = true;
-            }
-            Some(HelloEvent::Exit) => {
-                println!("button clicked");
-            }
-            _ => (),
-        }
-        vec![]
+        vec![message]
     }
 }
 
@@ -128,20 +120,12 @@ async fn main() {
 
 impl RootComponent<AppParams> for App {
     fn root(&mut self, w: &dyn std::any::Any, app_params: &dyn Any) {
-        println!("root initialized");
         let app_params = app_params.downcast_ref::<AppParams>().unwrap();
         self.state_mut().app_channel = app_params.app_channel.clone();
     }
 }
 
 fn launch_ui(id: i32) -> anyhow::Result<()> {
-    // let env_filter = EnvFilter::try_from_default_env().unwrap_or(EnvFilter::new("debug"));
-    // tracing_subscriber::fmt()
-    //     .compact()
-    //     .with_env_filter(env_filter)
-    //     .init();
-
-    // let mut fonts: Vec<String> = Vec::new();
     let assets: HashMap<String, AssetParams> = HashMap::new();
     let mut svgs: HashMap<String, String> = HashMap::new();
 
@@ -156,8 +140,8 @@ fn launch_ui(id: i32) -> anyhow::Result<()> {
     fonts.load_font_data(include_bytes!("assets/fonts/SpaceGrotesk-Regular.ttf").into());
 
     let window_opts = WindowOptions {
-        height: 300 as u32,
-        width: 350 as u32,
+        height: 480_u32,
+        width: 480_u32,
         scale_factor: 1.0,
     };
 
@@ -172,7 +156,7 @@ fn launch_ui(id: i32) -> anyhow::Result<()> {
         layer: wlr_layer::Layer::Top,
         keyboard_interactivity: wlr_layer::KeyboardInteractivity::Exclusive,
         namespace: Some(window_info.namespace.clone()),
-        zone: 0 as i32,
+        zone: 0_i32,
     };
 
     let (app_channel_tx, app_channel_rx) = calloop::channel::channel();
@@ -193,9 +177,19 @@ fn launch_ui(id: i32) -> anyhow::Result<()> {
     let handle = event_loop.handle();
     let window_tx_2 = window_tx.clone();
 
+    let window_tx_channel = window_tx.clone();
+
+    let context_handler = context::get_static_context_handler();
+    context_handler.register_on_change(Box::new(move || {
+        println!("Context Changed");
+        window_tx_channel
+            .send(WindowMessage::Send { message: msg!(0) })
+            .unwrap();
+    }));
+    WeatherAPI::get().register_context_handler(context_handler);
+
     let _ = handle.insert_source(app_channel_rx, move |event: Event<AppMessage>, _, app| {
-        let _ = match event {
-            // calloop::channel::Event::Msg(msg) => app.app.push_message(msg),
+        match event {
             calloop::channel::Event::Msg(msg) => match msg {
                 AppMessage::Exit => {
                     println!("app channel message {:?}", AppMessage::Exit);
