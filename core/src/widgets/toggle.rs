@@ -104,7 +104,7 @@ impl Component for Toggle {
         let mut base = node!(
             Div::new().bg(Color::TRANSPARENT),
             lay![
-                size: [90., 42.],
+                size: [80., 40.],
                 cross_alignment: Alignment::Center,
                 padding: [0., 0.75, 0., 0.75]
             ]
@@ -127,7 +127,7 @@ impl Component for Toggle {
                     (0., 0., 0., 0.)
                 ),
             lay![
-                size: [82., 32.],
+                size: [76., 28.],
                 cross_alignment: Alignment::Center,
                 axis_alignment: if active {
                     Alignment::Start
@@ -146,7 +146,7 @@ impl Component for Toggle {
             lay![
                 position_type: PositionType::Absolute,
                 position:  if active {rect!(0., Auto, 0., 0.)} else {rect!(0., 0., 0., 0.)},
-                size: [40., 42.]
+                size: [38., 38.]
             ]
         );
 
@@ -154,13 +154,12 @@ impl Component for Toggle {
             node!(
                 Div::new(),
                 lay![
-                    margin:[0., 10., 0., 7.]
+                    margin:[0., 8., 0., 10.]
                 ]
             )
             .push(node!(Text::new(txt!(if active { "ON" } else { "OFF" }))
-                .with_class("light text-l")
-                .style("font", "Space Grotesk")
-                .style("font_weight", FontWeight::Bold),)),
+                .with_class("text-sm text-white font-semibold leading-3")
+                .style("font", "Space Grotesk"),)),
         );
         base = base.push(m_div);
         base = base.push(t_div);
