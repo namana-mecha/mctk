@@ -17,7 +17,7 @@ fn render_nodes_to_paths(
     for node in nodes {
         let mut path = Path::new();
 
-        match &*node.borrow() {
+        match &*node {
             usvg::Node::Group(child_group) => {
                 let mut child_paths = render_nodes_to_paths(child_group.children());
                 paths.append(&mut child_paths);

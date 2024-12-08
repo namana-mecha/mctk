@@ -17,6 +17,7 @@ default = []
 instrumented = ["superluminal-perf"]
 
 [dependencies]
+mctk_camera = { path = "../camera" }
 mctk_macros = { path = "../macros" }
 rgb = "0.8.20"
 imgref = "1.6.1"

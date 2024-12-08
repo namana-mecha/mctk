@@ -69,7 +69,7 @@ impl Image {
         }
 
         if let Some(image_id) = assets.get(&self.instance_data.name) {
-            let Pos { x, y, z } = pos;
+            let Pos { x, y, z: _ } = pos;
             let Scale { width, height } = scale;
 
             let paint = Paint::image(*image_id, x, y, width, height, 0.0, 1.0);

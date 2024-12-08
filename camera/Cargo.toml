@@ -1,0 +1,19 @@
+[package]
+name = "mctk_camera"
+version = "0.1.0"
+authors = ["Shoaib Merchant <shoaibm@mechasystems.com>"]
+documentation = "https://docs.mecha.so"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/mecha-org/mctk"
+homepage = "https://mecha.so"
+
+[dependencies]
+anyhow = { version = "1.0.75", features = ["backtrace"]}
+gstreamer = "0.23.2"
+gstreamer-app = "0.23.2"
+gstreamer-video = "0.23.2"
+image = { version = "0.24.9", features = ["jpeg"] }
+jpeg-decoder = "0.3.0"
+regex = "1.7"
+thiserror = "1.0"
