@@ -1,14 +1,17 @@
 // mod contexts;
 use anyhow::Error;
+use camera::Camera;
 use image::{ImageBuffer, Rgb};
 use mctk_camera::camera::GstCamera;
 use mctk_camera::types::{CameraFormat, FrameFormat};
+use mctk_core::context::Model;
 use mctk_core::prelude::*;
 use mctk_core::reexports::smithay_client_toolkit::{
     reexports::calloop::{self, channel::Event},
     shell::wlr_layer,
 };
 use mctk_core::renderables::Renderable;
+use mctk_core::widgets::Text;
 use mctk_smithay::layer_shell::layer_surface::LayerOptions;
 use mctk_smithay::layer_shell::layer_window::{LayerWindow, LayerWindowParams};
 use mctk_smithay::xdg_shell::xdg_window::{self, XdgWindowMessage, XdgWindowParams};
@@ -19,6 +22,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 use tokio::time;
 
+mod camera;
 // use crate::contexts::camera::Camera;
 
 // App level channel
@@ -91,32 +95,33 @@ impl Component for App {
             camera: None,
             camera_fb: ImageBuffer::default(),
         };
-
-        // init camera
-        let camera = match GstCamera::new(
-            0,
-            Some(CameraFormat::new_from(640, 480, FrameFormat::MJPEG, 30)),
-        ) {
-            Ok(mut c) => {
-                match c.open_stream() {
-                    Ok(()) => {
-                        println!("camera open success");
-                    }
-                    Err(err) => {
-                        println!("failed to open camera stream: {}", err);
-                    }
-                };
-                Some(c)
-            }
-            Err(e) => {
-                println!("failed to create camera, err - {:?}", e);
-                None
-            }
-        };
-
-        std::thread::sleep(Duration::from_millis(2000));
-        app_state.camera = camera;
-
+        Camera::start_fetching();
+        //
+        // // init camera
+        // let camera = match GstCamera::new(
+        //     0,
+        //     Some(CameraFormat::new_from(640, 480, FrameFormat::MJPEG, 30)),
+        // ) {
+        //     Ok(mut c) => {
+        //         match c.open_stream() {
+        //             Ok(()) => {
+        //                 println!("camera open success");
+        //             }
+        //             Err(err) => {
+        //                 println!("failed to open camera stream: {}", err);
+        //             }
+        //         };
+        //         Some(c)
+        //     }
+        //     Err(e) => {
+        //         println!("failed to create camera, err - {:?}", e);
+        //         None
+        //     }
+        // };
+        //
+        // std::thread::sleep(Duration::from_millis(2000));
+        // app_state.camera = camera;
+        //
         self.state = Some(app_state);
     }
 
@@ -125,15 +130,14 @@ impl Component for App {
     }
 
     fn on_tick(&mut self, _: &mut mctk_core::event::Event<mctk_core::event::Tick>) {
-        let frame = self.get_camera_frame();
-        self.state_mut().value = self.state_ref().value + 1.;
-        // Note: there is some issue, below does not re-render without using
-        // some other state
-        self.state_mut().camera_fb = frame;
+        // let frame = self.get_camera_frame();
+        // self.state_mut().value = self.state_ref().value + 1.;
+        // // Note: there is some issue, below does not re-render without using
+        // // some other state
+        // self.state_mut().camera_fb = frame;
     }
 
     fn view(&self) -> Option<Node> {
-        let camera_fb = &self.state_ref().camera_fb;
         let value = self.state_ref().value;
 
         println!("value is {:?}", value);
@@ -147,7 +151,15 @@ impl Component for App {
                 ]
             )
             .push(node!(
-                Image::from_buffer(camera_fb.clone()),
+                // Text::new(txt!(camera::Camera::get().test_value.get().to_string()))
+                //     .style("color", Color::WHITE)
+                //     .style("size", 40.0)
+                //     .style("h_alignment", HorizontalPosition::Center),
+                Image::from_buffer(
+                    camera::Camera::get_buffer(),
+                    camera::Camera::get_width() as usize,
+                    camera::Camera::get_height() as usize
+                ),
                 lay![size: size!(360.0, 300.0)]
             ))
             .push(node!(
@@ -250,6 +262,15 @@ fn launch_ui(id: i32) -> anyhow::Result<()> {
     );
     let handle = event_loop.handle();
     let window_tx_2 = window_tx.clone();
+    let window_tx_channel = window_tx.clone();
+    let context_handler = context::get_static_context_handler();
+    context_handler.register_on_change(Box::new(move || {
+        println!("Context Changed");
+        window_tx_channel
+            .send(WindowMessage::Send { message: msg!(0) })
+            .unwrap();
+    }));
+    Camera::get().register_context_handler(context_handler);
 
     let _ = handle.insert_source(app_channel_rx, move |event: Event<AppMessage>, _, app| {
         let _ = match event {

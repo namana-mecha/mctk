@@ -1,8 +1,9 @@
 use std::hash::Hash;
 
-use image::{ImageBuffer, Rgb};
+use image::ImageBuffer;
 use mctk_macros::component;
 use rand::random;
+use rgb::{FromSlice, Rgb};
 
 use crate::component::{Component, ComponentHasher, RenderContext};
 
@@ -26,7 +27,9 @@ pub struct Image {
     pub name: String,
     pub src: ImageSource,
     pub path: String,
-    pub buffer: ImageBuffer<Rgb<u8>, Vec<u8>>,
+    pub height: usize,
+    pub width: usize,
+    pub buffer: Box<[Rgb<u8>]>,
 }
 
 impl Default for Image {
@@ -34,7 +37,9 @@ impl Default for Image {
         Self {
             name: "".to_string(),
             path: "".to_string(),
-            buffer: ImageBuffer::default(),
+            buffer: Box::from([]),
+            height: 0,
+            width: 0,
             src: ImageSource::Asset,
             class: Default::default(),
             style_overrides: Default::default(),
@@ -47,20 +52,24 @@ impl Image {
         Self {
             name: name.into(),
             path: Default::default(),
-            buffer: ImageBuffer::default(),
+            buffer: Box::from([]),
+            height: 0,
+            width: 0,
             src: ImageSource::Asset,
             class: Default::default(),
             style_overrides: Default::default(),
         }
     }
 
-    pub fn from_buffer(buffer: ImageBuffer<Rgb<u8>, Vec<u8>>) -> Self {
+    pub fn from_buffer(buffer: Box<[Rgb<u8>]>, width: usize, height: usize) -> Self {
         Self {
             name: "".to_string(),
             path: "".to_string(),
             src: ImageSource::Buffer,
             class: Default::default(),
             style_overrides: Default::default(),
+            width,
+            height,
             buffer,
         }
     }
@@ -115,7 +124,9 @@ impl Component for Image {
                     .scale(Scale { width, height })
                     .radius(radius)
                     // todo! figure out without cloning
-                    .img_buffer(self.buffer.clone())
+                    .height(self.height)
+                    .width(self.width)
+                    .img_buffer(Some(self.buffer.clone()))
                     .build()
                     .unwrap();
 

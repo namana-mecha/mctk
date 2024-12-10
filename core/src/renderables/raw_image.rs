@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Mutex};
 
 use crate::{Pos, Scale};
 
@@ -6,9 +6,9 @@ use super::types;
 use super::types::Canvas;
 use derive_builder::Builder;
 use femtovg::{CompositeOperation, ImageFlags, ImageId, Paint, Path};
-use image::{ImageBuffer, Rgb};
+use image::ImageBuffer;
 use imgref::{Img, ImgExt};
-use rgb::{FromSlice, RGBA8};
+use rgb::{FromSlice, Rgb, RGBA8};
 
 type Point = types::Point<f32>;
 type Size = types::Size<f32>;
@@ -21,7 +21,9 @@ pub struct Instance {
     pub composite_operation: CompositeOperation,
     #[builder(default = "0.0")]
     pub radius: f32,
-    pub img_buffer: ImageBuffer<Rgb<u8>, Vec<u8>>,
+    pub height: usize,
+    pub width: usize,
+    pub img_buffer: Option<Box<[Rgb<u8>]>>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -37,7 +39,9 @@ impl RawImage {
                 scale,
                 composite_operation: CompositeOperation::SourceOver,
                 radius: Default::default(),
-                img_buffer: ImageBuffer::default(),
+                height: 0,
+                width: 0,
+                img_buffer: None,
             },
         }
     }
@@ -47,12 +51,14 @@ impl RawImage {
         self
     }
 
-    pub fn render(&self, canvas: &mut Canvas) {
+    pub fn render(&self, canvas: &mut Canvas) -> Option<ImageId> {
         let Instance {
             pos,
             scale,
             composite_operation,
             radius,
+            height: image_height,
+            width: image_width,
             img_buffer,
             ..
         } = self.instance_data.clone();
@@ -60,24 +66,19 @@ impl RawImage {
 
         println!("drawing raw image");
 
-        let frame_rgb8 = img_buffer.as_rgb();
-
-        // dont draw if nothing to draw
-        if frame_rgb8.len() == 0 {
-            return;
-        }
+        // let frame_rgb8 = img_buffer.as_rgb();
 
         canvas.global_composite_operation(composite_operation);
+
+        let image = img_buffer.as_ref()?.as_ref();
+        if image.len() == 0 {
+            return None;
+        }
 
         // create image in canvas
         let canvas_image_id = canvas
             .create_image(
-                Img::new(
-                    frame_rgb8,
-                    img_buffer.width() as usize,
-                    img_buffer.height() as usize,
-                )
-                .as_ref(),
+                Img::new(image, image_width, image_height).as_ref(),
                 ImageFlags::empty(),
             )
             .unwrap();
@@ -89,10 +90,9 @@ impl RawImage {
         let mut path = Path::new();
         path.rounded_rect(x, y, width, height, radius);
         canvas.fill_path(&path, &paint);
-
         println!("drawing raw image: done");
-
         canvas.global_composite_operation(CompositeOperation::SourceOver);
+        Some(canvas_image_id)
     }
 
     pub fn from_instance_data(instance_data: Instance) -> Self {

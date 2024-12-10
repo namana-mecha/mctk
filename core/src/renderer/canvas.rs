@@ -158,6 +158,8 @@ impl super::Renderer for CanvasRenderer {
             Color::rgba(0, 0, 0, 0),
         );
 
+        let mut images_to_delete = vec![];
+
         for (renderable, _, _) in node.iter_renderables() {
             match renderable {
                 Renderable::Rect(rect) => {
@@ -173,7 +175,9 @@ impl super::Renderer for CanvasRenderer {
                     image.render(canvas, &mut context.images);
                 }
                 Renderable::RawImage(raw_image) => {
-                    raw_image.render(canvas);
+                    if let Some(image_id) = raw_image.render(canvas) {
+                        images_to_delete.push(image_id);
+                    }
                 }
                 Renderable::Svg(svg) => {
                     svg.render(canvas, &mut self.svgs);
@@ -197,6 +201,10 @@ impl super::Renderer for CanvasRenderer {
         surface
             .swap_buffers(&gl_context)
             .expect("Could not swap buffers");
+
+        for image in images_to_delete {
+            canvas.delete_image(image);
+        }
     }
 
     /// This default is provided for tests, it should be overridden

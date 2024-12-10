@@ -96,7 +96,7 @@ impl GstCamera {
     }
 
     /// raw data from device
-    pub fn frame_raw(&mut self) -> Result<Cow<[u8]>, CameraGstError> {
+    pub fn frame_raw(&mut self) -> Result<Vec<u8>, CameraGstError> {
         let bus = match self.pipeline.bus() {
             Some(bus) => bus,
             None => {
@@ -124,7 +124,7 @@ impl GstCamera {
             }
         }
 
-        Ok(Cow::from(self.image_lock.lock().unwrap().to_vec()))
+        Ok(self.image_lock.lock().unwrap().to_vec())
     }
 
     /// stop device stream
