@@ -1,0 +1,20 @@
+[package]
+name = "homeassistant"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+mctk_core = { path = "../../core", version = "0.1.0" }
+mctk_smithay = { path = "../../backends/smithay", version = "0.1.0" }
+mctk_macros = { path = "../../macros", version = "0.1.0" }
+smithay-client-toolkit = "0.18.0"
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"]}
+anyhow = { version = "1.0.75", features = ["backtrace"]}
+tokio = { version = "1.33", features = ["full"] }
+lazy_static = "1.5.0"
+rand = "0.8.5"
+reqwest = { version = "0.12.9", features = ["json"] }
+serde = "1.0.215"
+serde_json = "1.0.133"
