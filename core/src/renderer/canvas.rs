@@ -172,6 +172,9 @@ impl super::Renderer for CanvasRenderer {
                 Renderable::Image(image) => {
                     image.render(canvas, &mut context.images);
                 }
+                Renderable::RawImage(raw_image) => {
+                    raw_image.render(canvas);
+                }
                 Renderable::Svg(svg) => {
                     svg.render(canvas, &mut self.svgs);
                 }
