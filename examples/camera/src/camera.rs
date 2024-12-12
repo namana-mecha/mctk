@@ -18,7 +18,10 @@ lazy_static! {
     pub static ref CAMERA: Camera = Camera {
         frame_buffer: Context::new(ImageBuffer::default()),
         is_initialized: Context::new(false),
-        test_value: Context::new(0)
+        fps: Context::new(30),
+        device_index: Context::new(0),
+        height: Context::new(480),
+        width: Context::new(640),
     };
     pub static ref GST_CAMERA: Mutex<Option<GstCamera>> = Mutex::new(None);
 }
@@ -27,21 +30,42 @@ lazy_static! {
 pub struct Camera {
     is_initialized: Context<bool>,
     pub frame_buffer: Context<ImageBuffer<image::Rgb<u8>, Vec<u8>>>,
-    pub test_value: Context<u64>,
+    pub fps: Context<u32>,
+    pub device_index: Context<usize>,
+    pub width: Context<u32>,
+    pub height: Context<u32>,
 }
 
 impl Camera {
     pub fn get() -> &'static Self {
+        &CAMERA
+    }
+
+    pub fn init() {
         if !*CAMERA.is_initialized.get() {
             println!("initializing camera");
             let camera = match GstCamera::new(
-                0,
-                Some(CameraFormat::new_from(640, 480, FrameFormat::MJPEG, 30)),
+                *CAMERA.device_index.get(),
+                Some(CameraFormat::new_from(
+                    *CAMERA.width.get(),
+                    *CAMERA.height.get(),
+                    FrameFormat::MJPEG,
+                    *CAMERA.fps.get(),
+                )),
             ) {
                 Ok(mut c) => {
                     match c.open_stream() {
                         Ok(()) => {
                             println!("camera open success");
+                            println!(
+                                "camera format: {:?}",
+                                CameraFormat::new_from(
+                                    *CAMERA.width.get(),
+                                    *CAMERA.height.get(),
+                                    FrameFormat::MJPEG,
+                                    *CAMERA.fps.get(),
+                                )
+                            );
                         }
                         Err(err) => {
                             println!("failed to open camera stream: {}", err);
@@ -57,7 +81,6 @@ impl Camera {
             *GST_CAMERA.lock().unwrap() = camera;
             CAMERA.is_initialized.set(true);
         }
-        &CAMERA
     }
 
     pub fn get_buffer() -> Box<[Rgb<u8>]> {
@@ -74,10 +97,8 @@ impl Camera {
 
     pub fn start_fetching() {
         RUNTIME.spawn(async move {
-            let mut i = 0;
             std::thread::sleep(std::time::Duration::from_millis(2000));
             loop {
-                i += 1;
                 Camera::get();
                 match GST_CAMERA.lock().unwrap().as_mut().unwrap().frame() {
                     Ok(f) => {
@@ -88,7 +109,9 @@ impl Camera {
                         println!("error from frame {:?}", e);
                     }
                 };
-                std::thread::sleep(std::time::Duration::from_millis(1000 / 30));
+                std::thread::sleep(std::time::Duration::from_secs_f64(
+                    1.0 / (*Self::get().fps.get() as f64),
+                ));
             }
         });
     }

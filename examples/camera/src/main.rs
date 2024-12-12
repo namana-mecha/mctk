@@ -139,8 +139,7 @@ impl Component for App {
 
     fn view(&self) -> Option<Node> {
         let value = self.state_ref().value;
-
-        println!("value is {:?}", value);
+        println!("{}", Camera::get().fps.get());
 
         Some(
             node!(
@@ -193,9 +192,80 @@ impl Component for App {
     }
 }
 
+use std::env;
+
+#[derive(Debug)]
+struct CameraConfig {
+    fps: u32,
+    device_index: usize,
+    height: u32,
+    width: u32,
+}
+
+impl CameraConfig {
+    fn new() -> Self {
+        // Default values for camera configuration
+        CameraConfig {
+            fps: 30,
+            device_index: 0,
+            height: 480,
+            width: 640,
+        }
+    }
+
+    fn parse_args() -> Self {
+        let args: Vec<String> = env::args().collect();
+        let mut config = CameraConfig::new();
+
+        let mut i = 1;
+        while i < args.len() {
+            match args[i].as_str() {
+                "--fps" => {
+                    if i + 1 < args.len() {
+                        config.fps = args[i + 1].parse().unwrap_or(config.fps);
+                        i += 1;
+                    }
+                }
+                "--camera" => {
+                    if i + 1 < args.len() {
+                        config.device_index = args[i + 1].parse().unwrap_or(config.device_index);
+                        i += 1;
+                    }
+                }
+                "--height" => {
+                    if i + 1 < args.len() {
+                        config.height = args[i + 1].parse().unwrap_or(config.height);
+                        i += 1;
+                    }
+                }
+                "--width" => {
+                    if i + 1 < args.len() {
+                        config.width = args[i + 1].parse().unwrap_or(config.width);
+                        i += 1;
+                    }
+                }
+                _ => {}
+            }
+            i += 1;
+        }
+
+        config
+    }
+}
+
 // Layer Surface App
 #[tokio::main]
 async fn main() {
+    let config = CameraConfig::parse_args();
+
+    println!("Camera Configuration: {:?}", config);
+
+    Camera::get().fps.set(config.fps);
+    Camera::get().device_index.set(config.device_index);
+    Camera::get().height.set(config.height);
+    Camera::get().width.set(config.width);
+    Camera::init();
+
     let id = 1;
     let ui_t = std::thread::spawn(move || {
         let _ = launch_ui(id);

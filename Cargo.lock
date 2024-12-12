@@ -298,6 +298,7 @@ dependencies = [
  "mctk_smithay",
  "rand",
  "regex",
+ "rgb",
  "smithay-client-toolkit 0.18.1",
  "thiserror",
  "tokio",
