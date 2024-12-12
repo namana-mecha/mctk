@@ -60,7 +60,7 @@ impl Component for Scrollables {
             )
             .push(
                 node!(
-                    Scrollable::new(),
+                    Scrollable::new(size!(300, 280)),
                     lay![
                         size: [300, 280],
                     ]
