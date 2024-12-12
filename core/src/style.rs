@@ -377,6 +377,8 @@ impl Default for Style {
             (StyleKey::new("Button", "padding", Some("p-5")), 20.0.into()),
             (StyleKey::new("Button", "padding", Some("p-6")), 24.0.into()),
             (StyleKey::new("Button", "padding", Some("p-7")), 28.0.into()),
+            (StyleKey::new("Button", "padding", Some("p-8")), 32.0.into()),
+            (StyleKey::new("Button", "padding", Some("p-9")), 36.0.into()),
             // IconButton
             (
                 StyleKey::new("IconButton", "size", None),
@@ -498,6 +500,14 @@ impl Default for Style {
             (
                 StyleKey::new("IconButton", "padding", Some("p-7")),
                 28.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "padding", Some("p-8")),
+                32.0.into(),
+            ),
+            (
+                StyleKey::new("IconButton", "padding", Some("p-9")),
+                36.0.into(),
             ),
             (StyleKey::new("IconButton", "radius", None), 0.0.into()),
             (

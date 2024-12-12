@@ -1,9 +1,8 @@
-use std::hash::{Hash, Hasher};
 use std::ops::Neg;
 
 use super::{Div, RoundedRect};
 use crate::component::Component;
-use crate::layout::{Direction, PositionType, ScrollPosition};
+use crate::layout::{Direction, PositionType, ScrollPosition, Size};
 use crate::types::*;
 use crate::{lay, rect, size};
 use crate::{node, node::Node};
@@ -22,13 +21,16 @@ pub struct ScrollableState {
 
 #[component(State = "ScrollableState", Styled, Internal)]
 #[derive(Debug, Default)]
-pub struct Scrollable {}
+pub struct Scrollable {
+    size: Size,
+}
 
 impl Scrollable {
-    pub fn new() -> Self {
+    pub fn new(s: Size) -> Self {
         Self {
             state: Some(ScrollableState::default()),
             dirty: false,
+            size: s,
             class: Default::default(),
             style_overrides: Default::default(),
         }
@@ -119,19 +121,11 @@ impl Component for Scrollable {
         _frame: AABB,
         _scale_factor: f32,
     ) {
-        if self.state.is_some() {
-            if self.state_ref().aabb != Some(aabb.clone()) {
-                self.state_mut().aabb = Some(aabb.clone());
-            }
-        }
+        aabb.set_scale(self.size.width.into(), self.size.height.into());
     }
 
     fn view(&self) -> Option<Node> {
-        let size = if let Some(aabb) = self.state_ref().aabb {
-            aabb.size()
-        } else {
-            Scale::new(1., 1.)
-        };
+        let size = self.size;
         let scroll_y = self.state_ref().scroll_position.y;
 
         Some(
