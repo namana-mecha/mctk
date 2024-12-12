@@ -104,7 +104,7 @@ impl Component for Toggle {
         let mut base = node!(
             Div::new().bg(Color::TRANSPARENT),
             lay![
-                size: [80., 40.],
+                size: [72., 40.],
                 cross_alignment: Alignment::Center,
                 padding: [0., 0.75, 0., 0.75]
             ]
@@ -113,21 +113,13 @@ impl Component for Toggle {
         let mut t_div = node!(
             Div::new()
                 .bg(if active {
-                    Color::rgb(2., 19., 55.)
+                    Color::rgb(45., 138., 255.)
                 } else {
-                    Color::rgb(25., 25., 25.)
+                    Color::rgb(255., 255., 255.)
                 })
-                .border(
-                    if active {
-                        Color::rgb(45., 138., 255.)
-                    } else {
-                        Color::rgb(132., 132., 132.)
-                    },
-                    2.5,
-                    (0., 0., 0., 0.)
-                ),
+                .border(Color::TRANSPARENT, 1., (16., 16., 16., 16.)),
             lay![
-                size: [76., 28.],
+                size: [72., 32.],
                 cross_alignment: Alignment::Center,
                 axis_alignment: if active {
                     Alignment::Start
@@ -138,15 +130,18 @@ impl Component for Toggle {
         );
 
         let m_div = node!(
-            Div::new().bg(if active {
-                Color::rgb(45., 138., 255.)
-            } else {
-                Color::rgb(132., 132., 132.)
-            }),
+            Div::new()
+                .bg(if active {
+                    Color::rgb(255., 255., 255.)
+                } else {
+                    Color::rgb(97., 97., 97.)
+                })
+                .border(Color::TRANSPARENT, 1., (50., 50., 50., 50.)),
             lay![
                 position_type: PositionType::Absolute,
                 position:  if active {rect!(0., Auto, 0., 0.)} else {rect!(0., 0., 0., 0.)},
-                size: [38., 38.]
+                margin: if active  {rect![5., 0., 0., 2.]} else {rect![5., 2., 0., 0.]},
+                size: [30., 30.]
             ]
         );
 
@@ -158,7 +153,11 @@ impl Component for Toggle {
                 ]
             )
             .push(node!(Text::new(txt!(if active { "ON" } else { "OFF" }))
-                .with_class("text-sm text-white font-semibold leading-3")
+                .with_class(if active {
+                    "text-sm text-white font-semibold leading-3"
+                } else {
+                    "text-sm text-gray font-semibold leading-3"
+                })
                 .style("font", "Space Grotesk"),)),
         );
         base = base.push(m_div);
