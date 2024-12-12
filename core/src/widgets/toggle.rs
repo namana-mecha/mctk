@@ -104,7 +104,7 @@ impl Component for Toggle {
         let mut base = node!(
             Div::new().bg(Color::TRANSPARENT),
             lay![
-                size: [72., 40.],
+                size: [58., 38.],
                 cross_alignment: Alignment::Center,
                 padding: [0., 0.75, 0., 0.75]
             ]
@@ -119,7 +119,7 @@ impl Component for Toggle {
                 })
                 .border(Color::TRANSPARENT, 1., (16., 16., 16., 16.)),
             lay![
-                size: [72., 32.],
+                size: [58., 30.],
                 cross_alignment: Alignment::Center,
                 axis_alignment: if active {
                     Alignment::Start
@@ -140,26 +140,26 @@ impl Component for Toggle {
             lay![
                 position_type: PositionType::Absolute,
                 position:  if active {rect!(0., Auto, 0., 0.)} else {rect!(0., 0., 0., 0.)},
-                margin: if active  {rect![5., 0., 0., 2.]} else {rect![5., 2., 0., 0.]},
-                size: [30., 30.]
+                margin: if active  {rect![5., 0., 0., 5.]} else {rect![5., 2., 0., 0.]},
+                size: [28., 28.]
             ]
         );
 
-        t_div = t_div.push(
-            node!(
-                Div::new(),
-                lay![
-                    margin:[0., 8., 0., 10.]
-                ]
-            )
-            .push(node!(Text::new(txt!(if active { "ON" } else { "OFF" }))
-                .with_class(if active {
-                    "text-sm text-white font-semibold leading-3"
-                } else {
-                    "text-sm text-gray font-semibold leading-3"
-                })
-                .style("font", "Space Grotesk"),)),
-        );
+        // t_div = t_div.push(
+        //     node!(
+        //         Div::new(),
+        //         lay![
+        //             margin:[0., 8., 0., 10.]
+        //         ]
+        //     )
+        //     .push(node!(Text::new(txt!(if active { "ON" } else { "OFF" }))
+        //         .with_class(if active {
+        //             "text-sm text-white font-semibold leading-3"
+        //         } else {
+        //             "text-sm text-gray font-semibold leading-3"
+        //         })
+        //         .style("font", "Space Grotesk"),)),
+        // );
         base = base.push(m_div);
         base = base.push(t_div);
 
