@@ -34,7 +34,7 @@ pub enum Message {
     IconButton { name: String },
     ChangePage { page: Pages },
     Toggle { value: bool },
-    Radio { selection: usize },
+    Radio { value: String },
     SlideBar { value: u8 },
 }
 
@@ -80,8 +80,8 @@ impl Component for Kitchen {
                 Message::Toggle { value } => {
                     println!("Toggle change: {:?}", value);
                 }
-                Message::Radio { selection } => {
-                    println!("Radio change: {:?}", selection);
+                Message::Radio { value } => {
+                    println!("Radio change: {:?}", value);
                 }
                 Message::SlideBar { value } => {
                     println!("Slide bar change: {:?}", value);

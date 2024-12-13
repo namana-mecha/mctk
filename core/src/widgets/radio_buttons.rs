@@ -29,12 +29,12 @@ struct RadioButtonsState {
 
 #[component(State = "RadioButtonsState", Styled = "RadioButton", Internal)]
 pub struct RadioButtons {
-    buttons: Vec<Vec<TextSegment>>,
-    selected: usize,
+    buttons: Vec<(Vec<TextSegment>, Vec<TextSegment>)>,
+    selected: Vec<TextSegment>,
     direction: Direction,
     max_rows: Option<usize>,
     max_columns: Option<usize>,
-    on_change: Option<Box<dyn Fn(usize) -> Message + Send + Sync>>,
+    on_change: Option<Box<dyn Fn(String) -> Message + Send + Sync>>,
     radio_buttons_type: RadioButtonsType,
 }
 
@@ -48,11 +48,14 @@ impl fmt::Debug for RadioButtons {
 }
 
 enum RadioButtonMsg {
-    Clicked(usize),
+    Clicked(usize, String),
 }
 
 impl RadioButtons {
-    pub fn new(buttons: Vec<Vec<TextSegment>>, selected: usize) -> Self {
+    pub fn new(
+        buttons: Vec<(Vec<TextSegment>, Vec<TextSegment>)>,
+        selected: Vec<TextSegment>,
+    ) -> Self {
         Self {
             buttons,
             selected,
@@ -83,7 +86,7 @@ impl RadioButtons {
         self
     }
 
-    pub fn on_change(mut self, change_fn: Box<dyn Fn(usize) -> Message + Send + Sync>) -> Self {
+    pub fn on_change(mut self, change_fn: Box<dyn Fn(String) -> Message + Send + Sync>) -> Self {
         self.on_change = Some(change_fn);
         self
     }
@@ -97,7 +100,15 @@ impl RadioButtons {
 #[state_component_impl(RadioButtonsState)]
 impl Component for RadioButtons {
     fn new_props(&mut self) {
-        self.state_mut().selected = self.selected;
+        let selected = self
+            .buttons
+            .iter()
+            .position(|(_, value)| {
+                value.get(0).unwrap().text.clone() == self.selected.get(0).unwrap().text.clone()
+            })
+            .unwrap_or_default();
+
+        self.state_mut().selected = selected;
     }
 
     fn props_hash(&self, hasher: &mut ComponentHasher) {
@@ -154,7 +165,7 @@ impl Component for RadioButtons {
             ]
         )
         .key(i as u64);
-        for (position, b) in self.buttons.iter().enumerate() {
+        for (position, (label, value)) in self.buttons.iter().enumerate() {
             if j >= limit {
                 j = 0;
                 i += 1;
@@ -203,7 +214,8 @@ impl Component for RadioButtons {
             container = container.push(
                 node!(
                     RadioButton {
-                        label: b.clone(),
+                        label: label.clone(),
+                        value: value.clone(),
                         radio_button_type: self.radio_buttons_type,
                         position,
                         selected,
@@ -237,10 +249,10 @@ impl Component for RadioButtons {
         let mut m: Vec<Message> = vec![];
 
         match message.downcast_ref::<RadioButtonMsg>() {
-            Some(RadioButtonMsg::Clicked(n)) => {
-                self.state_mut().selected = *n;
+            Some(RadioButtonMsg::Clicked(position, label)) => {
+                self.state_mut().selected = *position;
                 if let Some(change_fn) = &self.on_change {
-                    m.push(change_fn(*n));
+                    m.push(change_fn(label.clone()));
                 }
             }
             None => panic!(),
@@ -253,6 +265,7 @@ impl Component for RadioButtons {
 #[derive(Debug)]
 struct RadioButton {
     label: Vec<TextSegment>,
+    value: Vec<TextSegment>,
     position: usize,
     selected: bool,
     radius: (f32, f32, f32, f32),
@@ -424,12 +437,18 @@ impl Component for RadioButton {
 
     fn on_click(&mut self, event: &mut event::Event<event::Click>) {
         event.stop_bubbling();
-        event.emit(msg!(RadioButtonMsg::Clicked(self.position)));
+        event.emit(msg!(RadioButtonMsg::Clicked(
+            self.position,
+            self.value.get(0).unwrap().text.clone()
+        )));
     }
 
     // Same as on_click
     fn on_double_click(&mut self, event: &mut event::Event<event::DoubleClick>) {
         event.stop_bubbling();
-        event.emit(msg!(RadioButtonMsg::Clicked(self.position)));
+        event.emit(msg!(RadioButtonMsg::Clicked(
+            self.position,
+            self.value.get(0).unwrap().text.clone()
+        )));
     }
 }
