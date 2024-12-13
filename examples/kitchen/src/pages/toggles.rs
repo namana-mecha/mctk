@@ -1,6 +1,6 @@
 use mctk_core::layout::{Alignment, Direction};
 use mctk_core::style::Styled;
-use mctk_core::widgets::{IconButton, IconType, Text, Toggle};
+use mctk_core::widgets::{IconButton, IconType, Text, Toggle, ToggleType};
 use mctk_core::{component::Component, node, widgets::Div, Color};
 use mctk_core::{lay, msg, rect, size, size_pct, txt};
 
@@ -70,12 +70,21 @@ impl Component for Toggles {
                 node!(
                     Div::new().bg(Color::BLACK),
                     lay![
-                        cross_alignment: Alignment::Center,
-                        padding: [6]
+                    direction: Direction::Column,
+                    cross_alignment: Alignment::Stretch,
+                    padding: [6]
                     ]
                 )
                 .push(node!(
                     Toggle::new(true).on_change(Box::new(|v| msg!(Message::Toggle { value: v }))),
+                    lay![
+                        margin:[0., 0., 0., 28.],
+                    ]
+                ))
+                .push(node!(
+                    Toggle::new(true)
+                        .toggle_type(ToggleType::Type1)
+                        .on_change(Box::new(|v| msg!(Message::Toggle { value: v }))),
                     lay![
                         margin:[0., 0., 0., 28.],
                     ]

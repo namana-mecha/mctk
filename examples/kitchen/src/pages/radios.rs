@@ -66,17 +66,17 @@ impl Component for Radios {
             .push(node!(Div::new().bg(Color::BLACK), lay![]).push(node!(
                 RadioButtons::new(
                     vec![
-                        txt!("Rust".to_string()),
-                        txt!("Javascript".to_string()),
-                        txt!("C++".to_string()),
+                        (txt!("Rust".to_string()), txt!("rust".to_string())),
+                        (txt!("JS".to_string()), txt!("javascript".to_string())),
+                        (txt!("C++".to_string()) , txt!("c++".to_string()))
                     ],
-                    0,
+                    txt!("rust".to_string()),
                 )
                 .direction(mctk_core::layout::Direction::Column)
                 .style("font_size", 18.0)
                 .style("padding", 10.)
                 .max_columns(1)
-                .on_change(Box::new(|s| msg!(Message::Radio { selection: s }))),
+                .on_change(Box::new(|s| msg!(Message::Radio { value: s }))),
                 lay![margin: [0, 10], size: [400, Auto]]
             ))), // .push(node!(
                  //     RadioButtons::new(
