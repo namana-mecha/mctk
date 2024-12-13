@@ -30,7 +30,7 @@ struct RadioButtonsState {
 #[component(State = "RadioButtonsState", Styled = "RadioButton", Internal)]
 pub struct RadioButtons {
     buttons: Vec<(Vec<TextSegment>, Vec<TextSegment>)>,
-    selected: Vec<TextSegment>,
+    selected: Option<Vec<TextSegment>>,
     direction: Direction,
     max_rows: Option<usize>,
     max_columns: Option<usize>,
@@ -52,13 +52,10 @@ enum RadioButtonMsg {
 }
 
 impl RadioButtons {
-    pub fn new(
-        buttons: Vec<(Vec<TextSegment>, Vec<TextSegment>)>,
-        selected: Vec<TextSegment>,
-    ) -> Self {
+    pub fn new(buttons: Vec<(Vec<TextSegment>, Vec<TextSegment>)>) -> Self {
         Self {
             buttons,
-            selected,
+            selected: None,
             direction: Direction::Row,
             max_rows: None,
             max_columns: None,
@@ -69,6 +66,11 @@ impl RadioButtons {
             dirty: false,
             state: Some(RadioButtonsState::default()),
         }
+    }
+
+    pub fn selected(mut self, selected: Vec<TextSegment>) -> Self {
+        self.selected = Some(selected);
+        self
     }
 
     pub fn direction(mut self, direction: Direction) -> Self {
@@ -99,12 +101,17 @@ impl RadioButtons {
 
 #[state_component_impl(RadioButtonsState)]
 impl Component for RadioButtons {
-    fn new_props(&mut self) {
+    fn init(&mut self) {
+        if self.selected.is_none() || self.state.is_none() {
+            return;
+        }
+
         let selected = self
             .buttons
             .iter()
             .position(|(_, value)| {
-                value.get(0).unwrap().text.clone() == self.selected.get(0).unwrap().text.clone()
+                value.get(0).unwrap().text.clone()
+                    == self.selected.as_ref().unwrap().get(0).unwrap().text.clone()
             })
             .unwrap_or_default();
 

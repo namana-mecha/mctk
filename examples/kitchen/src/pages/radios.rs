@@ -70,8 +70,8 @@ impl Component for Radios {
                         (txt!("JS".to_string()), txt!("javascript".to_string())),
                         (txt!("C++".to_string()) , txt!("c++".to_string()))
                     ],
-                    txt!("rust".to_string()),
                 )
+                .selected(txt!("javascript".to_string()))
                 .direction(mctk_core::layout::Direction::Column)
                 .style("font_size", 18.0)
                 .style("padding", 10.)
