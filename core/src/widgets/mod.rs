@@ -40,7 +40,7 @@ mod radio_buttons;
 pub use radio_buttons::RadioButtons;
 
 mod toggle;
-pub use toggle::Toggle;
+pub use toggle::{Toggle, ToggleType};
 
 mod h_divider;
 pub use h_divider::HDivider;
