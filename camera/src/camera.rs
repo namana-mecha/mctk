@@ -1,9 +1,3 @@
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::str::FromStr;
-use std::sync::{Arc, Mutex};
-
-use gstreamer::glib::Quark;
 use gstreamer::prelude::*;
 use gstreamer::{
     element_error,
@@ -12,12 +6,17 @@ use gstreamer::{
     ResourceError, State,
 };
 use gstreamer_app::{AppSink, AppSinkCallbacks};
+use gstreamer_video::glib::Quark;
 use gstreamer_video::{VideoFormat, VideoInfo};
 use image::ImageBuffer;
 use image::{Rgb, RgbaImage};
 use regex::Regex;
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 
-use crate::errors::CameraGstError;
+use crate::error::CameraGstError;
 use crate::types::{mjpeg_to_rgb24, CameraFormat, CameraInfo, FrameFormat};
 use crate::types::{yuyv422_to_rgb, Resolution};
 
@@ -25,7 +24,6 @@ type PipelineGenRet = (Element, AppSink, Arc<Mutex<ImageBuffer<Rgb<u8>, Vec<u8>>
 
 /// A camera from gstreamer pipeline
 #[allow(dead_code)]
-#[derive(Debug)]
 pub struct GstCamera {
     index: usize,
     pipeline: Element,
@@ -78,9 +76,7 @@ impl GstCamera {
     /// get rgb image from device
     pub fn frame(&mut self) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, CameraGstError> {
         let cam_fmt = self.camera_format;
-        println!("CAMERA FORMAT: {:?}", cam_fmt);
         let image_data = self.frame_raw()?;
-        println!("IMAGE DATA: {}", image_data.len());
         let imagebuf =
             match ImageBuffer::from_vec(cam_fmt.width(), cam_fmt.height(), image_data.to_vec()) {
                 Some(buf) => {
@@ -96,7 +92,7 @@ impl GstCamera {
     }
 
     /// raw data from device
-    pub fn frame_raw(&mut self) -> Result<Vec<u8>, CameraGstError> {
+    pub fn frame_raw(&mut self) -> Result<Cow<[u8]>, CameraGstError> {
         let bus = match self.pipeline.bus() {
             Some(bus) => bus,
             None => {
@@ -106,7 +102,6 @@ impl GstCamera {
             }
         };
 
-        println!("Pipeline has bus");
         if let Some(message) = bus.timed_pop(ClockTime::from_seconds(0)) {
             match message.view() {
                 MessageView::Eos(..) => {
@@ -124,7 +119,7 @@ impl GstCamera {
             }
         }
 
-        Ok(self.image_lock.lock().unwrap().to_vec())
+        Ok(Cow::from(self.image_lock.lock().unwrap().to_vec()))
     }
 
     /// stop device stream
@@ -177,7 +172,7 @@ impl GstCamera {
     #[allow(clippy::too_many_lines)]
     #[allow(clippy::cast_sign_loss)]
     #[allow(dead_code)]
-    fn compatible_list_by_resolution(
+    pub fn compatible_list_by_resolution(
         &mut self,
         fourcc: FrameFormat,
     ) -> Result<HashMap<Resolution, Vec<u32>>, CameraGstError> {
@@ -558,22 +553,23 @@ fn generate_pipeline(fmt: CameraFormat, index: usize) -> Result<PipelineGenRet, 
 
                 let image_buffer = match video_info.format() {
                     VideoFormat::Yuy2 => {
-                        let mut decoded_buffer = match yuyv422_to_rgb(&buffer_map, true) {
-                            Ok(buf) => buf,
-                            Err(why) => {
-                                element_error!(
-                                    appsink,
-                                    ResourceError::Failed,
-                                    (
-                                        "{}",
-                                        format!("Failed to make yuy2 into rgb888: {}", why)
-                                            .as_str()
-                                    )
-                                );
+                        let mut decoded_buffer =
+                            match yuyv422_to_rgb(&buffer_map, video_info.has_alpha()) {
+                                Ok(buf) => buf,
+                                Err(why) => {
+                                    element_error!(
+                                        appsink,
+                                        ResourceError::Failed,
+                                        (
+                                            "{}",
+                                            format!("Failed to make yuy2 into rgb888: {}", why)
+                                                .as_str()
+                                        )
+                                    );
 
-                                return Err(FlowError::Error);
-                            }
-                        };
+                                    return Err(FlowError::Error);
+                                }
+                            };
 
                         decoded_buffer.resize(
                             (video_info.width() * video_info.height() * channels) as usize,
@@ -685,6 +681,24 @@ fn generate_pipeline(fmt: CameraFormat, index: usize) -> Result<PipelineGenRet, 
     Ok((pipeline, appsink, image_lock))
 }
 
+#[cfg(target_os = "macos")]
+fn webcam_pipeline(device: &str, camera_format: CameraFormat) -> String {
+    match camera_format.format() {
+        FrameFormat::MJPEG => {
+            format!("autovideosrc location=/dev/video{} ! image/jpeg,width={},height={},framerate={}/1 ! appsink name=appsink async=false sync=false", device, camera_format.width(), camera_format.height(), camera_format.frame_rate())
+        }
+        FrameFormat::YUYV => {
+            format!("autovideosrc location=/dev/video{} ! video/x-raw,format=YUY2,width={},height={},framerate={}/1 ! appsink name=appsink async=false sync=false", device, camera_format.width(), camera_format.height(), camera_format.frame_rate())
+        }
+        FrameFormat::GRAY => {
+            format!("autovideosrc location=/dev/video{} ! video/x-raw,format=GRAY8,width={},height={},framerate={}/1 ! appsink name=appsink async=false sync=false", device, camera_format.width(), camera_format.height(), camera_format.frame_rate())
+        }
+        _ => {
+            format!("unsupproted! if you see this, switch to something else!")
+        }
+    }
+}
+
 #[cfg(target_os = "linux")]
 fn webcam_pipeline(device: &str, camera_format: CameraFormat) -> String {
     match camera_format.format() {
@@ -698,5 +712,21 @@ fn webcam_pipeline(device: &str, camera_format: CameraFormat) -> String {
             format!("v4l2src device=/dev/video{} ! video/x-raw,format=GRAY8,width={},height={},framerate={}/1 ! appsink name=appsink async=false sync=false", device, camera_format.width(), camera_format.height(), camera_format.frame_rate())
         }
         _ => "unsupported! if you see this, switch to something else!".to_string(),
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn webcam_pipeline(device: &str, camera_format: CameraFormat) -> String {
+    match camera_format.format() {
+        FrameFormat::MJPEG => {
+            format!("mfvideosrc   device_index={} ! image/jpeg, width={},height={},framerate={}/1 ! appsink name=appsink async=false sync=false", device, camera_format.width(), camera_format.height(), camera_format.frame_rate())
+        }
+        FrameFormat::YUYV => {
+            format!("mfvideosrc   device_index={} ! video/x-raw,format=YUY2,width={},height={},framerate={}/1 ! appsink name=appsink async=false sync=false", device, camera_format.width(), camera_format.height(), camera_format.frame_rate())
+        }
+        FrameFormat::GRAY => {
+            format!("mfvideosrc   device_index={} ! video/x-raw,format=GRAY8,width={},height={},framerate={}/1 ! appsink name=appsink async=false sync=false", device, camera_format.width(), camera_format.height(), camera_format.frame_rate())
+        }
+        _ => "unsupproted! if you see this, switch to something else!".to_string(),
     }
 }

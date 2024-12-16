@@ -1,7 +1,6 @@
+use crate::error::CameraGstError;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
-
-use crate::errors::CameraGstError;
 
 #[derive(Copy, Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Resolution {
@@ -222,58 +221,31 @@ pub fn buf_yuyv422_to_rgb(data: &[u8], dest: &mut [u8], rgba: bool) -> Result<()
         });
     }
 
-    let iter = data.chunks_exact(4);
+    let mut buf: Vec<u8> = Vec::new();
+    // let iter = data.chunks_exact(4);
+    for chunk in data.chunks_exact(4) {
+        let y0 = f32::from(chunk[0]);
+        let u = f32::from(chunk[1]);
+        let y1 = f32::from(chunk[2]);
+        let v = f32::from(chunk[3]);
 
-    if rgba {
-        let mut iter = iter
-            .flat_map(|yuyv| {
-                let y1 = i32::from(yuyv[0]);
-                let u = i32::from(yuyv[1]);
-                let y2 = i32::from(yuyv[2]);
-                let v = i32::from(yuyv[3]);
-                let pixel1 = yuyv444_to_rgba(y1, u, v);
-                let pixel2 = yuyv444_to_rgba(y2, u, v);
-                [pixel1, pixel2]
-            })
-            .flatten();
-        for i in dest.iter_mut().take(rgb_buf_size) {
-            *i = match iter.next() {
-                Some(v) => v,
-                None => {
-                    return Err(CameraGstError::ProcessFrameError {
-                        src: FrameFormat::YUYV,
-                        destination: "RGBA8888".to_string(),
-                        error: "Ran out of RGBA YUYV values! (this should not happen, please file an issue: l1npengtul/nokhwa)".to_string()
-                    })
-                }
-            }
-        }
-    } else {
-        let mut iter = iter
-            .flat_map(|yuyv| {
-                let y1 = i32::from(yuyv[0]);
-                let u = i32::from(yuyv[1]);
-                let y2 = i32::from(yuyv[2]);
-                let v = i32::from(yuyv[3]);
-                let pixel1 = yuyv444_to_rgb(y1, u, v);
-                let pixel2 = yuyv444_to_rgb(y2, u, v);
-                [pixel1, pixel2]
-            })
-            .flatten();
+        let r0 = y0 + 1.370_705 * (v - 128.);
+        let g0 = y0 - 0.698_001 * (v - 128.) - 0.337_633 * (u - 128.);
+        let b0 = y0 + 1.732_446 * (u - 128.);
 
-        for i in dest.iter_mut().take(rgb_buf_size) {
-            *i = match iter.next() {
-                Some(v) => v,
-                None => {
-                    return Err(CameraGstError::ProcessFrameError {
-                        src: FrameFormat::YUYV,
-                        destination: "RGB888".to_string(),
-                        error: "Ran out of RGB YUYV values! (this should not happen, please file an issue: l1npengtul/nokhwa)".to_string()
-                    })
-                }
-            }
+        let r1 = y1 + 1.370_705 * (v - 128.);
+        let g1 = y1 - 0.698_001 * (v - 128.) - 0.337_633 * (u - 128.);
+        let b1 = y1 + 1.732_446 * (u - 128.);
+
+        if rgba {
+            buf.extend_from_slice(&[
+                r0 as u8, g0 as u8, b0 as u8, 255, r1 as u8, g1 as u8, b1 as u8, 255,
+            ]);
+        } else {
+            buf.extend_from_slice(&[r0 as u8, g0 as u8, b0 as u8, r1 as u8, g1 as u8, b1 as u8]);
         }
     }
+    dest.copy_from_slice(&buf);
 
     Ok(())
 }
@@ -292,6 +264,21 @@ pub fn yuyv444_to_rgb(y: i32, u: i32, v: i32) -> [u8; 3] {
     let r = ((c298 + 409 * e + 128) >> 8) as u8;
     let g = ((c298 - 100 * d - 208 * e + 128) >> 8) as u8;
     let b = ((c298 + 516 * d + 128) >> 8) as u8;
+    [r, g, b]
+}
+
+#[allow(clippy::many_single_char_names)]
+#[allow(clippy::cast_possible_truncation)]
+#[allow(clippy::cast_sign_loss)]
+#[must_use]
+#[inline]
+pub fn yuv422_to_rgb(y: i32, u: i32, v: i32) -> [u8; 3] {
+    let c298 = (y - 16) * 298;
+    let d = u - 128;
+    let e = v - 128;
+    let r = ((c298 + 409 * e + 128) >> 8).clamp(0, 255) as u8;
+    let g = ((c298 - 100 * d - 208 * e + 128) >> 8).clamp(0, 255) as u8;
+    let b = ((c298 + 516 * d + 128) >> 8).clamp(0, 255) as u8;
     [r, g, b]
 }
 

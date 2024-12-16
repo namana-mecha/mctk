@@ -49,8 +49,8 @@ pub mod prelude {
     pub use crate::reexports::*;
     pub use crate::style::*;
     pub use crate::widgets::{
-        Button, Carousel, Div, IconButton, IconType, Image, RoundedRect, Slider, Svg, TextBox,
-        TextBoxAction, TextBoxVariant, TransitionPositions,
+        Button, Carousel, Div, IconButton, IconType, Image, RoundedRect, Slider, Svg, Text,
+        TextBox, TextBoxAction, TextBoxVariant, TransitionPositions,
     };
     pub use crate::*;
 }

@@ -64,8 +64,6 @@ impl RawImage {
         } = self.instance_data.clone();
         let Scale { width, height } = scale;
 
-        println!("drawing raw image");
-
         // let frame_rgb8 = img_buffer.as_rgb();
 
         canvas.global_composite_operation(composite_operation);
@@ -90,7 +88,6 @@ impl RawImage {
         let mut path = Path::new();
         path.rounded_rect(x, y, width, height, radius);
         canvas.fill_path(&path, &paint);
-        println!("drawing raw image: done");
         canvas.global_composite_operation(CompositeOperation::SourceOver);
         Some(canvas_image_id)
     }

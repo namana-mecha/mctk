@@ -1,3 +1,3 @@
 pub mod camera;
-pub mod errors;
+pub mod error;
 pub mod types;
