@@ -78,7 +78,7 @@ impl Component for Toggles {
                 .push(node!(
                     Toggle::new(true).on_change(Box::new(|v| msg!(Message::Toggle { value: v }))),
                     lay![
-                        margin:[0., 0., 0., 28.],
+                        margin:[0., 0., 30., 0.],
                     ]
                 ))
                 .push(node!(
@@ -86,7 +86,15 @@ impl Component for Toggles {
                         .toggle_type(ToggleType::Type1)
                         .on_change(Box::new(|v| msg!(Message::Toggle { value: v }))),
                     lay![
-                        margin:[0., 0., 0., 28.],
+                        margin:[0., 0., 30., 0.],
+                    ]
+                ))
+                .push(node!(
+                    Toggle::new(true)
+                        .toggle_type(ToggleType::Type2)
+                        .on_change(Box::new(|v| msg!(Message::Toggle { value: v }))),
+                    lay![
+                        margin:[0., 0., 2., 0.],
                     ]
                 )),
             ),

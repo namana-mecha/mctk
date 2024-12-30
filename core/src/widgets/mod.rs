@@ -45,5 +45,8 @@ pub use toggle::{Toggle, ToggleType};
 mod h_divider;
 pub use h_divider::HDivider;
 
+mod v_divider;
+pub use v_divider::VDivider;
+
 mod slide_bar;
 pub use slide_bar::{SlideBar, SlideBarType};
