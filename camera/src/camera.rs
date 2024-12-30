@@ -9,7 +9,7 @@ use gstreamer_app::{AppSink, AppSinkCallbacks};
 use gstreamer_video::glib::Quark;
 use gstreamer_video::{VideoFormat, VideoInfo};
 use image::ImageBuffer;
-use image::{Rgb, RgbaImage};
+use image::{Rgba, RgbaImage};
 use regex::Regex;
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -20,7 +20,7 @@ use crate::error::CameraGstError;
 use crate::types::{mjpeg_to_rgb24, CameraFormat, CameraInfo, FrameFormat};
 use crate::types::{yuyv422_to_rgb, Resolution};
 
-type PipelineGenRet = (Element, AppSink, Arc<Mutex<ImageBuffer<Rgb<u8>, Vec<u8>>>>);
+type PipelineGenRet = (Element, AppSink, Arc<Mutex<ImageBuffer<Rgba<u8>, Vec<u8>>>>);
 
 /// A camera from gstreamer pipeline
 #[allow(dead_code)]
@@ -30,7 +30,7 @@ pub struct GstCamera {
     app_sink: AppSink,
     camera_format: CameraFormat,
     camera_info: CameraInfo,
-    image_lock: Arc<Mutex<ImageBuffer<Rgb<u8>, Vec<u8>>>>,
+    image_lock: Arc<Mutex<ImageBuffer<Rgba<u8>, Vec<u8>>>>,
     caps: Option<Caps>,
 }
 
@@ -74,13 +74,13 @@ impl GstCamera {
     }
 
     /// get rgb image from device
-    pub fn frame(&mut self) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, CameraGstError> {
+    pub fn frame(&mut self) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, CameraGstError> {
         let cam_fmt = self.camera_format;
         let image_data = self.frame_raw()?;
         let imagebuf =
             match ImageBuffer::from_vec(cam_fmt.width(), cam_fmt.height(), image_data.to_vec()) {
                 Some(buf) => {
-                    let rgb: ImageBuffer<Rgb<u8>, Vec<u8>> = buf;
+                    let rgb: ImageBuffer<Rgba<u8>, Vec<u8>> = buf;
                     rgb
                 }
                 None => return Err(CameraGstError::ReadFrameError(
@@ -553,26 +553,26 @@ fn generate_pipeline(fmt: CameraFormat, index: usize) -> Result<PipelineGenRet, 
 
                 let image_buffer = match video_info.format() {
                     VideoFormat::Yuy2 => {
-                        let mut decoded_buffer =
-                            match yuyv422_to_rgb(&buffer_map, video_info.has_alpha()) {
-                                Ok(buf) => buf,
-                                Err(why) => {
-                                    element_error!(
-                                        appsink,
-                                        ResourceError::Failed,
-                                        (
-                                            "{}",
-                                            format!("Failed to make yuy2 into rgb888: {}", why)
-                                                .as_str()
-                                        )
-                                    );
-
-                                    return Err(FlowError::Error);
-                                }
-                            };
-
+                        // let mut decoded_buffer =
+                        //     match yuyv422_to_rgb(&buffer_map, video_info.has_alpha()) {
+                        //         Ok(buf) => buf,
+                        //         Err(why) => {
+                        //             element_error!(
+                        //                 appsink,
+                        //                 ResourceError::Failed,
+                        //                 (
+                        //                     "{}",
+                        //                     format!("Failed to make yuy2 into rgb888: {}", why)
+                        //                         .as_str()
+                        //                 )
+                        //             );
+                        //
+                        //             return Err(FlowError::Error);
+                        //         }
+                        //     };
+                        let mut decoded_buffer = buffer_map.as_slice().to_vec();
                         decoded_buffer.resize(
-                            (video_info.width() * video_info.height() * channels) as usize,
+                            (video_info.width() * video_info.height() * 4) as usize,
                             0_u8,
                         );
 
@@ -581,7 +581,7 @@ fn generate_pipeline(fmt: CameraFormat, index: usize) -> Result<PipelineGenRet, 
                             video_info.height(),
                             decoded_buffer,
                         ) {
-                            let rgb: ImageBuffer<Rgb<u8>, Vec<u8>> = i;
+                            let rgb: ImageBuffer<Rgba<u8>, Vec<u8>> = i;
                             rgb
                         } else {
                             element_error!(
@@ -605,7 +605,7 @@ fn generate_pipeline(fmt: CameraFormat, index: usize) -> Result<PipelineGenRet, 
                             video_info.height(),
                             decoded_buffer,
                         ) {
-                            let rgb: ImageBuffer<Rgb<u8>, Vec<u8>> = i;
+                            let rgb: ImageBuffer<Rgba<u8>, Vec<u8>> = i;
                             rgb
                         } else {
                             element_error!(
@@ -647,7 +647,7 @@ fn generate_pipeline(fmt: CameraFormat, index: usize) -> Result<PipelineGenRet, 
                             video_info.height(),
                             decoded_buffer,
                         ) {
-                            let rgb: ImageBuffer<Rgb<u8>, Vec<u8>> = i;
+                            let rgb: ImageBuffer<Rgba<u8>, Vec<u8>> = i;
                             rgb
                         } else {
                             element_error!(

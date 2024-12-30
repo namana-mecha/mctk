@@ -3,7 +3,7 @@ use std::hash::Hash;
 use image::ImageBuffer;
 use mctk_macros::component;
 use rand::random;
-use rgb::{FromSlice, Rgb};
+use rgb::{FromSlice, Rgba};
 
 use crate::component::{Component, ComponentHasher, RenderContext};
 
@@ -29,7 +29,7 @@ pub struct Image {
     pub path: String,
     pub height: usize,
     pub width: usize,
-    pub buffer: Box<[Rgb<u8>]>,
+    pub buffer: Box<[Rgba<u8>]>,
 }
 
 impl Default for Image {
@@ -61,7 +61,7 @@ impl Image {
         }
     }
 
-    pub fn from_buffer(buffer: Box<[Rgb<u8>]>, width: usize, height: usize) -> Self {
+    pub fn from_buffer(buffer: Box<[Rgba<u8>]>, width: usize, height: usize) -> Self {
         Self {
             name: "".to_string(),
             path: "".to_string(),

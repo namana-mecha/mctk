@@ -53,6 +53,8 @@ enum RadioButtonMsg {
 
 impl RadioButtons {
     pub fn new(buttons: Vec<Vec<TextSegment>>, selected: usize) -> Self {
+        let mut state = RadioButtonsState::default();
+        state.selected = selected;
         Self {
             buttons,
             selected,
@@ -64,7 +66,7 @@ impl RadioButtons {
             style_overrides: Default::default(),
             radio_buttons_type: Default::default(),
             dirty: false,
-            state: Some(RadioButtonsState::default()),
+            state: Some(state),
         }
     }
 
