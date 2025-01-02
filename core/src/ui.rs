@@ -293,7 +293,15 @@ impl<
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
+        // Acquire the window write lock
         let mut window = self.window.write().unwrap();
+
+        // Check if the requested size is already set to avoid unnecessary work
+        if window.logical_size() == PixelSize::new(width, height) {
+            return;
+        }
+
+        // Prepare the Wayland handle and assets
         let wayland_handle =
             RawWaylandHandle(window.raw_display_handle(), window.raw_window_handle());
         let assets = window.assets();
@@ -303,14 +311,15 @@ impl<
         self.logical_size = Arc::new(RwLock::new(window.logical_size()));
 
         // update the renderer canvas
-        let mut renderer = self.renderer.write().unwrap();
-
-        if renderer.is_none() {
+        if let Ok(mut renderer) = self.renderer.try_write() {
+            println!("Acquired renderer lock");
+            if let Some(renderer) = renderer.as_mut() {
+                renderer.resize(width, height);
+            }
+        } else {
+            println!("Renderer lock is already held. Skipping resize.");
             return;
         }
-
-        // clear any caches stored with the renderer
-        renderer.as_mut().unwrap().resize(width, height);
 
         // kill the existing thread
         self.render_channel
