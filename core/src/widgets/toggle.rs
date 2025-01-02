@@ -215,21 +215,15 @@ impl Toggle {
         );
 
         let mut t_div = node!(
-            Div::new()
-                .bg(if active {
-                    Color::rgb(2., 19., 55.)
+            Div::new().bg(Color::rgb(25., 25., 25.)).border(
+                if active {
+                    Color::rgba(45., 138., 255., 1.)
                 } else {
-                    Color::rgb(25., 25., 25.)
-                })
-                .border(
-                    if active {
-                        Color::rgba(45., 138., 255., 1.)
-                    } else {
-                        Color::rgba(219., 219., 219., 1.)
-                    },
-                    2.5,
-                    (0., 0., 0., 0.)
-                ),
+                    Color::rgba(219., 219., 219., 1.)
+                },
+                2.5,
+                (0., 0., 0., 0.)
+            ),
             lay![
                 size: [60., 26.],
                 cross_alignment: Alignment::Center,
