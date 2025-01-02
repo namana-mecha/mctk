@@ -8,6 +8,15 @@ use rand::thread_rng;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 
+// Define the frames
+const frames: [(u8, usize, usize); 5] = [
+    (5, 4, 6),
+    (13, 11, 14),
+    (25, 14, 26),
+    (59, 10, 31),
+    (100, 0, 0),
+];
+
 #[derive(Debug, Default, Clone)]
 pub enum SlideBarType {
     #[default]
@@ -18,14 +27,18 @@ pub enum SlideBarType {
 pub struct SlideBarState {
     value: u8,
     grid: Vec<Vec<bool>>,
+    elapsed_ticks: usize,
+    last_frame_index: Option<usize>,
+    is_dragging: bool,
 }
 #[component(State = "SlideBarState")]
-#[derive(Default)]
 pub struct SlideBar {
     pub value: u8,
     pub slider_type: SlideBarType,
     pub height: u8,
     pub active_color: Color,
+    pub bg_color: Color,
+    pub animation_bg_color: Color,
     pub col_width: f32,
     pub col_spacing: f32,
     pub row_spacing: f32,
@@ -34,7 +47,33 @@ pub struct SlideBar {
     pub reset_on_slide_end: bool,
     pub fill_random_on_start: bool,
     pub fill_random_on_slide: bool,
+    pub has_idle_animation: bool,
 }
+
+impl Default for SlideBar {
+    fn default() -> Self {
+        Self {
+            value: Default::default(),
+            slider_type: Default::default(),
+            height: Default::default(),
+            active_color: Default::default(),
+            bg_color: Color::rgb(49., 49., 49.),
+            animation_bg_color: Color::rgba(255., 255., 255., 0.60),
+            col_width: Default::default(),
+            col_spacing: Default::default(),
+            row_spacing: Default::default(),
+            on_slide: Default::default(),
+            on_slide_end: Default::default(),
+            reset_on_slide_end: Default::default(),
+            fill_random_on_start: Default::default(),
+            fill_random_on_slide: Default::default(),
+            has_idle_animation: Default::default(),
+            state: Default::default(),
+            dirty: Default::default(),
+        }
+    }
+}
+
 impl Debug for SlideBar {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SlideBar")
@@ -85,6 +124,15 @@ impl SlideBar {
         self.active_color = color;
         self
     }
+    pub fn bg_color(mut self, color: Color) -> Self {
+        self.bg_color = color;
+        self
+    }
+    pub fn animation_bg_color(mut self, color: Color) -> Self {
+        self.animation_bg_color = color;
+        self
+    }
+
     pub fn on_slide(mut self, f: Box<dyn Fn(u8) -> Message + Send + Sync>) -> Self {
         self.on_slide = Some(f);
         self
@@ -103,6 +151,11 @@ impl SlideBar {
     }
     pub fn fill_random_on_slide(mut self, value: bool) -> Self {
         self.fill_random_on_slide = value;
+        self
+    }
+
+    pub fn has_idle_animation(mut self, value: bool) -> Self {
+        self.has_idle_animation = value;
         self
     }
 
@@ -133,30 +186,30 @@ impl SlideBar {
             }
         }
 
-        if self.fill_random_on_slide {
-            let random_vec =
-                fill_grid_with_true(no_of_rows as usize, no_of_cols as usize - true_values, 8);
-            for i in 0..(no_of_cols as usize - true_values) {
-                for j in 0..no_of_rows as usize {
-                    grid[j][i + true_values] = random_vec[j][i];
-                }
-            }
-        }
+        // if self.fill_random_on_slide {
+        //     let random_vec =
+        //         fill_grid_with_true(no_of_rows as usize, no_of_cols as usize - true_values, 8);
+        //     for i in 0..(no_of_cols as usize - true_values) {
+        //         for j in 0..no_of_rows as usize {
+        //             grid[j][i + true_values] = random_vec[j][i];
+        //         }
+        //     }
+        // }
         self.state_mut().value = value;
         self.state_mut().grid = grid.clone();
         // println!("Slider::handle_on_drag() {:?}", grid);
         return Some(value);
     }
 
-    pub fn handle_on_drag_end(&mut self) {
-        if self.reset_on_slide_end {
-            self.state_mut().value = 0;
-            let prev_grid = self.state_ref().grid.clone();
-            let no_of_rows = prev_grid.len();
-            let no_of_cols = prev_grid.get(0).unwrap_or(&vec![] as &Vec<bool>).len();
-            let random_vec = fill_grid_with_true(no_of_rows as usize, no_of_cols as usize, 20);
-            self.state_mut().grid = random_vec;
-        }
+    fn reset(&mut self, num_true: usize) {
+        self.state_mut().value = 0;
+        let prev_grid = self.state_ref().grid.clone();
+        let no_of_rows = prev_grid.len();
+        let no_of_cols = prev_grid.get(0).unwrap_or(&vec![] as &Vec<bool>).len();
+        let random_vec = fill_grid_with_true(no_of_rows as usize, no_of_cols as usize, num_true);
+        self.state_mut().elapsed_ticks = 0;
+        self.state_mut().last_frame_index = None;
+        self.state_mut().grid = random_vec;
     }
 }
 #[state_component_impl(SlideBarState)]
@@ -165,11 +218,17 @@ impl Component for SlideBar {
         self.state = Some(SlideBarState {
             value: self.value,
             grid: Vec::new(),
+            elapsed_ticks: 0,
+            last_frame_index: None,
+            is_dragging: false,
         })
     }
     fn render_hash(&self, hasher: &mut ComponentHasher) {
         self.state_ref().value.hash(hasher);
         self.state_ref().grid.hash(hasher);
+        self.state_ref().last_frame_index.hash(hasher);
+        self.state_ref().elapsed_ticks.hash(hasher);
+        self.state_ref().is_dragging.hash(hasher);
         // println!("Slider::render_hash() {:?}", hasher.finish());
     }
     fn props_hash(&self, hasher: &mut ComponentHasher) {
@@ -179,14 +238,86 @@ impl Component for SlideBar {
         self.state_mut().value = self.value;
     }
 
+    // fn on_tick(&mut self, _event: &mut Event<event::Tick>) {
+    //     if !self.has_idle_animation {
+    //         return;
+    //     }
+
+    //     println!("on_tick() {:?}", self.state_ref().elapsed_ticks);
+    //     self.dirty = true;
+    //     let init_grid = self.state_ref().grid.clone();
+    //     let is_dragging = self.state_ref().is_dragging;
+    //     if is_dragging {
+    //         println!("on_tick cancelled, user is dragging");
+    //         return;
+    //     }
+
+    //     if init_grid.len() == 0 {
+    //         return;
+    //     }
+
+    //     if self.state_ref().last_frame_index == Some(frames.len() - 1) {
+    //         self.reset(0);
+    //         return;
+    //     }
+
+    //     let total_duration_secs = 2.; // Total duration in seconds
+    //     let ticks_per_second = 60; // 60 ticks per second
+    //     let total_ticks = (total_duration_secs * ticks_per_second as f32) as usize;
+
+    //     // Calculate the current frame
+    //     let ticks_per_frame = total_ticks / frames.len();
+    //     let elapsed_ticks = self.state_ref().elapsed_ticks; // Add this field to track elapsed ticks
+    //                                                         // println!("elapsed_ticks {:?}", elapsed_ticks);
+    //     self.state_mut().elapsed_ticks = elapsed_ticks + 1;
+    //     let current_frame_index = (elapsed_ticks / ticks_per_frame).min(frames.len() - 1);
+
+    //     // Skip rendering if the current frame is the same as the last rendered frame
+    //     if self.state_ref().last_frame_index == Some(current_frame_index) {
+    //         // println!("elaspsed ticks {:?}", elapsed_ticks);
+    //         return;
+    //     }
+
+    //     // Update the last rendered frame
+    //     self.state_mut().last_frame_index = Some(current_frame_index);
+
+    //     // Update value and no_of_random_cols dynamically
+    //     let (value, no_of_random_cols, num_true) = frames[current_frame_index];
+
+    //     let no_of_rows = init_grid.len();
+    //     let no_of_cols = init_grid.get(0).unwrap_or(&vec![] as &Vec<bool>).len();
+    //     let mut grid = vec![vec![false; no_of_cols as usize]; no_of_rows as usize];
+
+    //     // Set specific cells as true based on the current value
+    //     let true_values = (value as f32 * no_of_cols as f32 / 100.) as usize;
+    //     for i in 0..true_values {
+    //         for j in 0..no_of_rows as usize {
+    //             grid[j][i] = true;
+    //         }
+    //     }
+
+    //     if self.fill_random_on_slide {
+    //         let random_vec = fill_grid_with_true(no_of_rows as usize, no_of_random_cols, num_true);
+    //         for i in 0..(no_of_random_cols) {
+    //             for j in 0..no_of_rows as usize {
+    //                 grid[j][i + true_values] = random_vec[j][i];
+    //             }
+    //         }
+    //     }
+    //     // self.state_mut().value = value;
+    //     self.state_mut().grid = grid.clone();
+    // }
+
     fn on_drag_start(&mut self, event: &mut Event<event::DragStart>) {
         // println!("Slider::on_drag_start()");
         event.stop_bubbling();
+        self.state_mut().is_dragging = true;
     }
 
     fn on_touch_drag_start(&mut self, event: &mut Event<event::TouchDragStart>) {
         // println!("Slider::on_touch_drag_start()");
         event.stop_bubbling();
+        self.state_mut().is_dragging = true;
     }
 
     fn on_drag(&mut self, event: &mut Event<event::Drag>) {
@@ -226,7 +357,11 @@ impl Component for SlideBar {
             event.emit(f(value));
         }
 
-        self.handle_on_drag_end();
+        if self.reset_on_slide_end {
+            self.reset(20);
+        }
+
+        self.state_mut().is_dragging = false;
     }
 
     fn on_touch_drag_end(&mut self, event: &mut Event<event::TouchDragEnd>) {
@@ -236,7 +371,11 @@ impl Component for SlideBar {
             event.emit(f(value));
         }
 
-        self.handle_on_drag_end();
+        if self.reset_on_slide_end {
+            self.reset(20);
+        }
+
+        self.state_mut().is_dragging = false;
     }
 
     fn full_control(&self) -> bool {
@@ -289,6 +428,8 @@ impl Component for SlideBar {
             ]
         );
         let grid = self.state_ref().grid.clone();
+        let is_dragging = self.state_ref().is_dragging;
+        let has_idle_animation = self.has_idle_animation;
         // println!("Slider::view()");
         let slider_type = self.slider_type.clone();
         let col_width = self.col_width;
@@ -307,11 +448,15 @@ impl Component for SlideBar {
                     )
                     .key(i as u64);
                     for j in 0..grid.len() {
-                        let color = if grid[j][i] == true {
-                            self.active_color
-                        } else {
-                            Color::rgb(49., 49., 49.)
-                        };
+                        let mut color = self.bg_color;
+
+                        if grid[j][i] == true {
+                            if has_idle_animation && !is_dragging {
+                                color = self.animation_bg_color;
+                            } else {
+                                color = self.active_color;
+                            }
+                        }
                         col_grid = col_grid.push(
                             node!(
                                 Div::new().bg(color),
@@ -327,7 +472,7 @@ impl Component for SlideBar {
                     let color = if grid[0][i] == true {
                         self.active_color
                     } else {
-                        Color::rgb(49., 49., 49.)
+                        self.bg_color
                     };
                     let v_line = node!(
                         Div::new().bg(color),

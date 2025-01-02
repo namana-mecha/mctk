@@ -35,6 +35,7 @@ pub struct IconButton {
     pub on_press: Option<Box<dyn Fn() -> Message + Send + Sync>>,
     pub on_release: Option<Box<dyn Fn() -> Message + Send + Sync>>,
     pub disabled: bool,
+    pub dynamic_load_icon: Option<String>,
 }
 
 impl std::fmt::Debug for IconButton {
@@ -55,6 +56,7 @@ impl IconButton {
             on_press: None,
             on_release: None,
             disabled: false,
+            dynamic_load_icon: None,
             state: Some(IconButtonState::default()),
             dirty: false,
             class: Default::default(),
@@ -90,6 +92,11 @@ impl IconButton {
         self.disabled = d;
         self
     }
+
+    pub fn dynamic_load_icon(mut self, p: String) -> Self {
+        self.dynamic_load_icon = Some(p);
+        self
+    }
 }
 
 #[state_component_impl(IconButtonState)]
@@ -107,13 +114,15 @@ impl Component for IconButton {
 
         let icon = match self.icon_type {
             IconType::Svg => node!(
-                super::Svg::new(self.icon.clone()),
+                super::Svg::new(self.icon.clone())
+                    .dynamic_load_from(self.dynamic_load_icon.clone()),
                 lay![
                     size: [width as f64 - padding, height as f64 - padding],
                 ],
             ),
             IconType::Png => node!(
-                super::Image::new(self.icon.clone()),
+                super::Image::new(self.icon.clone())
+                    .dynamic_load_from(self.dynamic_load_icon.clone()),
                 lay![
                     size: [width as f64 - padding, height as f64 - padding],
                 ],
