@@ -102,7 +102,7 @@ impl LayerWindow {
                 fonts,
                 assets,
                 svgs,
-                layer_tx,
+                layer_tx: layer_tx.clone(),
             },
             app_params,
         );
@@ -115,6 +115,13 @@ impl LayerWindow {
                 let _ = match ev {
                     calloop::channel::Event::Msg(event) => {
                         match event {
+                            WindowMessage::FocusTextBox { focused } => {
+                                if focused {
+                                    app_window.activate_virtual_keyboard();
+                                } else {
+                                    app_window.deactivate_virtual_keyboard();
+                                }
+                            }
                             WindowMessage::Configure {
                                 width,
                                 height,
@@ -277,6 +284,12 @@ impl LayerWindow {
 }
 
 impl mctk_core::window::Window for LayerWindow {
+    fn activate_text_input(&self, activate: bool) {
+        self.window_tx
+            .send(WindowMessage::FocusTextBox { focused: activate })
+            .expect("failed to send message");
+    }
+
     fn logical_size(&self) -> PixelSize {
         PixelSize {
             width: self.width,

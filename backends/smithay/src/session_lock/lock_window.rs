@@ -97,6 +97,7 @@ impl SessionLockWindow {
                 let _ = match ev {
                     calloop::channel::Event::Msg(event) => {
                         match event {
+                            WindowMessage::FocusTextBox { focused: _ } => {}
                             WindowMessage::Configure {
                                 width,
                                 height,

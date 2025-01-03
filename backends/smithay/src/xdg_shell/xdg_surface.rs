@@ -33,7 +33,12 @@ use smithay_client_toolkit::{
             },
             Connection, QueueHandle,
         },
-        protocols::xdg::shell::client::xdg_surface::XdgSurface,
+        protocols::{
+            wp::text_input::zv3::client::{
+                zwp_text_input_manager_v3::ZwpTextInputManagerV3, zwp_text_input_v3::ZwpTextInputV3,
+            },
+            xdg::shell::client::xdg_surface::XdgSurface,
+        },
     },
     registry::{ProvidesRegistryState, RegistryState},
     registry_handlers,
@@ -51,9 +56,12 @@ use smithay_client_toolkit::{
         WaylandSurface,
     },
 };
-use wayland_client::protocol::{
-    wl_display::WlDisplay,
-    wl_touch::{self, WlTouch},
+use wayland_client::{
+    protocol::{
+        wl_display::WlDisplay,
+        wl_touch::{self, WlTouch},
+    },
+    Dispatch,
 };
 
 use super::xdg_window::XdgWindowMessage;
@@ -73,6 +81,8 @@ pub struct XdgShellSctkWindow {
     keyboard: Option<wl_keyboard::WlKeyboard>,
     keyboard_focus: bool,
     keyboard_modifiers: Modifiers,
+    text_input_manager: Option<ZwpTextInputManagerV3>,
+    text_input: Option<ZwpTextInputV3>,
     pointer: Option<wl_pointer::WlPointer>,
     touch: Option<wl_touch::WlTouch>,
     touch_map: AHashMap<i32, TouchPoint>,
@@ -150,7 +160,7 @@ impl XdgShellSctkWindow {
             });
         }
 
-        let state = XdgShellSctkWindow {
+        let mut state = XdgShellSctkWindow {
             queue_handle: queue_handle.clone(),
             window_tx,
             wl_display,
@@ -165,6 +175,8 @@ impl XdgShellSctkWindow {
             keyboard: None,
             keyboard_focus: false,
             keyboard_modifiers: Modifiers::default(),
+            text_input_manager: None,
+            text_input: None,
             pointer: None,
             touch: None,
             touch_map: AHashMap::new(),
@@ -172,7 +184,32 @@ impl XdgShellSctkWindow {
             scale_factor,
         };
 
+        if let Ok(text_input_manager) = state
+            .registry_state
+            .bind_one::<ZwpTextInputManagerV3, XdgShellSctkWindow, ()>(&queue_handle, 1..=1, ())
+        {
+            state.text_input = Some(text_input_manager.get_text_input(
+                &state.seat_state.seats().next().unwrap(),
+                &queue_handle,
+                (),
+            ));
+            state.text_input_manager = Some(text_input_manager);
+        }
         Ok((state, event_loop))
+    }
+
+    pub fn activate_virtual_keyboard(&mut self) {
+        if let Some(text_input) = &self.text_input {
+            text_input.enable();
+            text_input.commit();
+        }
+    }
+
+    pub fn deactivate_virtual_keyboard(&mut self) {
+        if let Some(text_input) = &self.text_input {
+            text_input.disable();
+            text_input.commit();
+        }
     }
 
     pub fn send_main_events_cleared(&mut self) {
@@ -649,6 +686,30 @@ impl ProvidesRegistryState for XdgShellSctkWindow {
     }
 
     registry_handlers!(OutputState, SeatState);
+}
+
+impl Dispatch<ZwpTextInputV3, ()> for XdgShellSctkWindow {
+    fn event(
+        _: &mut Self,
+        _: &ZwpTextInputV3,
+        _: <ZwpTextInputV3 as wayland_client::Proxy>::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
+}
+
+impl Dispatch<ZwpTextInputManagerV3, ()> for XdgShellSctkWindow {
+    fn event(
+        _: &mut Self,
+        _: &ZwpTextInputManagerV3,
+        _: <ZwpTextInputManagerV3 as wayland_client::Proxy>::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 delegate_compositor!(XdgShellSctkWindow);
