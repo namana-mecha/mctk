@@ -14,7 +14,7 @@ use smithay_client_toolkit::reexports::calloop::{self, EventLoop};
 use std::any::Any;
 use std::collections::HashMap;
 
-use crate::input::keyboard::{keysym_to_key, KeyboardEvent};
+use crate::input::keyboard::{keysym_to_key, keysym_to_text, KeyboardEvent};
 use crate::input::touch::TouchEvent;
 use crate::WindowInfo;
 use crate::{
@@ -214,7 +214,7 @@ impl XdgWindow {
                                                 keysym_to_key(key),
                                             )));
                                             ui.handle_input(&Input::Text(
-                                                keysym_to_key(key).to_string(),
+                                                keysym_to_text(key).to_string(),
                                             ));
                                         }
                                         KeyboardEvent::KeyReleased { key } => {

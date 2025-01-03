@@ -13,7 +13,7 @@ use smithay_client_toolkit::reexports::calloop::{self, EventLoop};
 use std::any::Any;
 use std::collections::HashMap;
 
-use crate::input::keyboard::{keysym_to_key, KeyboardEvent};
+use crate::input::keyboard::{keysym_to_key, keysym_to_text, KeyboardEvent};
 use crate::input::touch::TouchEvent;
 use crate::session_lock::lock_surface::SessionLockSctkWindow;
 use crate::{input::pointer, WindowEvent, WindowMessage, WindowOptions};
