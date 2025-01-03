@@ -41,6 +41,9 @@ pub enum WindowMessage {
         height: u32,
         wayland_handle: RawWaylandHandle,
     },
+    FocusTextBox {
+        focused: bool,
+    },
     CompositorFrame,
     MainEventsCleared,
     RedrawRequested,

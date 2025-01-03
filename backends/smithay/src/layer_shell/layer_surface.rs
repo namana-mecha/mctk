@@ -32,8 +32,12 @@ use smithay_client_toolkit::{
             },
             Connection, QueueHandle,
         },
+        protocols::wp::text_input::zv3::client::{
+            zwp_text_input_manager_v3::{self, ZwpTextInputManagerV3},
+            zwp_text_input_v3::{self, ContentHint, ContentPurpose, ZwpTextInputV3},
+        },
     },
-    registry::{ProvidesRegistryState, RegistryState},
+    registry::{ProvidesRegistryState, RegistryHandler, RegistryState},
     registry_handlers,
     seat::{
         keyboard::{KeyEvent, KeyboardHandler, Keysym, Modifiers},
@@ -46,9 +50,14 @@ use smithay_client_toolkit::{
         WaylandSurface,
     },
 };
-use wayland_client::protocol::{
-    wl_display::WlDisplay,
-    wl_touch::{self, WlTouch},
+use wayland_client::{
+    globals::BindError,
+    protocol::{
+        wl_display::WlDisplay,
+        wl_registry,
+        wl_touch::{self, WlTouch},
+    },
+    Dispatch,
 };
 
 pub struct LayerShellSctkWindow {
@@ -70,6 +79,8 @@ pub struct LayerShellSctkWindow {
     touch: Option<wl_touch::WlTouch>,
     touch_map: AHashMap<i32, TouchPoint>,
     initial_configure_sent: bool,
+    text_input_manager: Option<ZwpTextInputManagerV3>,
+    text_input: Option<ZwpTextInputV3>,
     pub scale_factor: f32,
     exit: bool,
 }
@@ -163,7 +174,7 @@ impl LayerShellSctkWindow {
             });
         }
 
-        let state = LayerShellSctkWindow {
+        let mut state = LayerShellSctkWindow {
             // app,
             // conn,
             queue_handle: queue_handle.clone(),
@@ -177,6 +188,8 @@ impl LayerShellSctkWindow {
             height,
             is_exited: false,
             keyboard: None,
+            text_input_manager: None,
+            text_input: None,
             keyboard_focus: false,
             keyboard_modifiers: Modifiers::default(),
             pointer: None,
@@ -189,8 +202,32 @@ impl LayerShellSctkWindow {
             // gl_surface,
             // gl_canvas,
         };
-
+        if let Ok(text_input_manager) = state
+            .registry_state
+            .bind_one::<ZwpTextInputManagerV3, LayerShellSctkWindow, ()>(&queue_handle, 1..=1, ())
+        {
+            state.text_input = Some(text_input_manager.get_text_input(
+                &state.seat_state.seats().next().unwrap(),
+                &queue_handle,
+                (),
+            ));
+            state.text_input_manager = Some(text_input_manager);
+        }
         Ok((state, event_loop))
+    }
+
+    pub fn activate_virtual_keyboard(&mut self) {
+        if let Some(text_input) = &self.text_input {
+            text_input.enable();
+            text_input.commit();
+        }
+    }
+
+    pub fn deactivate_virtual_keyboard(&mut self) {
+        if let Some(text_input) = &self.text_input {
+            text_input.disable();
+            text_input.commit();
+        }
     }
 
     pub fn send_main_events_cleared(&mut self) {
@@ -672,6 +709,30 @@ impl ProvidesRegistryState for LayerShellSctkWindow {
     }
 
     registry_handlers!(OutputState, SeatState);
+}
+
+impl Dispatch<ZwpTextInputV3, ()> for LayerShellSctkWindow {
+    fn event(
+        _: &mut Self,
+        _: &ZwpTextInputV3,
+        _: <ZwpTextInputV3 as wayland_client::Proxy>::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
+}
+
+impl Dispatch<ZwpTextInputManagerV3, ()> for LayerShellSctkWindow {
+    fn event(
+        _: &mut Self,
+        _: &ZwpTextInputManagerV3,
+        _: <ZwpTextInputManagerV3 as wayland_client::Proxy>::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 delegate_compositor!(LayerShellSctkWindow);

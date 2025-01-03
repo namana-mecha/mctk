@@ -77,6 +77,8 @@ pub trait Window: HasRawWindowHandle + HasRawDisplayHandle + Send + Sync + Any {
     // used to reconfigure wayland_handle
     fn set_wayland_handle(&mut self, wayland_handle: RawWaylandHandle) {}
 
+    fn activate_text_input(&self, activate: bool) {}
+
     fn has_handle(&self) -> bool {
         true
     }

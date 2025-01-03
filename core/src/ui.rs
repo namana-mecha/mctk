@@ -452,10 +452,20 @@ impl<
     }
 
     fn handle_focus_or_blur<T: EventInput>(&mut self, event: &Event<T>) {
+        if let Some(focus) = event.focus {
+            if focus == 0 {
+                self.window.read().unwrap().activate_text_input(false);
+            }
+        }
+
         if event.focus.is_none() {
             self.blur();
         } else if event.focus != Some(self.event_cache.focus) {
             self.blur();
+            self.window
+                .read()
+                .unwrap()
+                .activate_text_input(event.focus.unwrap() > 0);
             self.event_cache.focus = event.focus.unwrap();
             let mut focus_event = Event::new(event::Focus, &self.event_cache);
             focus_event.target = Some(self.event_cache.focus);

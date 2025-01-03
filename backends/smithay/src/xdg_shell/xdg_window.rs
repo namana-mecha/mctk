@@ -107,6 +107,13 @@ impl XdgWindow {
                 let _ = match ev {
                     calloop::channel::Event::Msg(event) => {
                         match event {
+                            WindowMessage::FocusTextBox { focused } => {
+                                if focused {
+                                    app_window.activate_virtual_keyboard();
+                                } else {
+                                    app_window.deactivate_virtual_keyboard();
+                                }
+                            }
                             WindowMessage::Configure {
                                 width,
                                 height,
@@ -268,6 +275,12 @@ impl XdgWindow {
 }
 
 impl mctk_core::window::Window for XdgWindow {
+    fn activate_text_input(&self, activate: bool) {
+        self.window_tx
+            .send(WindowMessage::FocusTextBox { focused: activate })
+            .expect("failed to send message");
+    }
+
     fn logical_size(&self) -> PixelSize {
         PixelSize {
             width: self.width,
