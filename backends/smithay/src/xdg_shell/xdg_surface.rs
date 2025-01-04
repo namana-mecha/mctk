@@ -35,7 +35,8 @@ use smithay_client_toolkit::{
         },
         protocols::{
             wp::text_input::zv3::client::{
-                zwp_text_input_manager_v3::ZwpTextInputManagerV3, zwp_text_input_v3::ZwpTextInputV3,
+                zwp_text_input_manager_v3::ZwpTextInputManagerV3,
+                zwp_text_input_v3::{ContentHint, ContentPurpose, ZwpTextInputV3},
             },
             xdg::shell::client::xdg_surface::XdgSurface,
         },
@@ -201,6 +202,7 @@ impl XdgShellSctkWindow {
     pub fn activate_virtual_keyboard(&mut self) {
         if let Some(text_input) = &self.text_input {
             text_input.enable();
+            text_input.set_content_type(ContentHint::None, ContentPurpose::Normal);
             text_input.commit();
         }
     }

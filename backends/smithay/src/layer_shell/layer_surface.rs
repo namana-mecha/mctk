@@ -219,6 +219,7 @@ impl LayerShellSctkWindow {
     pub fn activate_virtual_keyboard(&mut self) {
         if let Some(text_input) = &self.text_input {
             text_input.enable();
+            text_input.set_content_type(ContentHint::None, ContentPurpose::Normal);
             text_input.commit();
         }
     }
