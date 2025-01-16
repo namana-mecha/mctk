@@ -87,13 +87,12 @@ impl Component for App {
         self.state_ref().ease_in_out_animation.hash(hasher);
     }
 
+    fn on_tick(&mut self, _event: &mut mctk_core::event::Event<mctk_core::event::Tick>) {
+        self.dirty = true;
+    }
+
     fn view(&self) -> Option<Node> {
         let linear_animation = self.state_ref().linear_animation.get_value();
-        let text = node!(Text::new(txt!(format!(
-            "animation: {:?}",
-            linear_animation
-        ))),);
-
         let linear_label = node!(
             Text::new(txt!(format!("Liner Animation",)))
                 .style("color", Color::WHITE)
@@ -134,8 +133,6 @@ impl Component for App {
 
         base = base.push(ease_in_out_rectangle);
         base = base.push(ease_in_out_label);
-
-        base = base.push(text);
         Some(base)
     }
 
