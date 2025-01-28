@@ -60,7 +60,8 @@ impl Component for Scrollables {
             )
             .push(
                 node!(
-                    Scrollable::new(size!(300, 280)),
+                    Scrollable::new(size!(300, 280))
+                    .on_scroll_end(Box::new(|| msg!(Message::Scrollable { value: "Scrollable drag end".to_string() }))),
                     lay![
                         size: [300, 280],
                     ]

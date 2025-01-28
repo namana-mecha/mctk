@@ -3,8 +3,9 @@ use std::ops::Neg;
 use super::{Div, RoundedRect};
 use crate::component::Component;
 use crate::layout::{Direction, PositionType, ScrollPosition, Size};
+use crate::prelude::Message;
 use crate::types::*;
-use crate::{lay, rect, size};
+use crate::{event, lay, rect, size};
 use crate::{node, node::Node};
 use mctk_macros::{component, state_component_impl};
 
@@ -20,9 +21,18 @@ pub struct ScrollableState {
 }
 
 #[component(State = "ScrollableState", Styled, Internal)]
-#[derive(Debug, Default)]
+// #[derive(Debug, Default)]
 pub struct Scrollable {
-    size: Size,
+    pub size: Size,
+    pub on_scroll_end: Option<Box<dyn Fn() -> Message + Send + Sync>>,
+}
+
+impl std::fmt::Debug for Scrollable {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.debug_struct("Scrollable")
+            .field("size", &self.size)
+            .finish()
+    }
 }
 
 impl Scrollable {
@@ -33,7 +43,13 @@ impl Scrollable {
             size: s,
             class: Default::default(),
             style_overrides: Default::default(),
+            on_scroll_end: None,
         }
+    }
+
+    pub fn on_scroll_end(mut self, f: Box<dyn Fn() -> Message + Send + Sync>) -> Self {
+        self.on_scroll_end = Some(f);
+        self
     }
 }
 
@@ -44,6 +60,12 @@ impl Component for Scrollable {
         //     self.state_ref().scroll_position.hash(hasher);
         // }
         // println!("Scrollable::render_hash() {:?}", hasher.finish());
+    }
+
+    fn on_drag_end(&mut self, event: &mut crate::event::Event<crate::event::DragEnd>) {
+        if let Some(f) = &self.on_scroll_end {
+            event.emit(f());
+        }
     }
 
     fn on_drag_start(&mut self, event: &mut crate::event::Event<crate::event::DragStart>) {
