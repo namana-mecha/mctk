@@ -209,6 +209,8 @@ impl<
 
                         let caches: crate::renderer::Caches = renderer.as_mut().unwrap().caches();
 
+                        // A mutable reference to caches to cache the properties that are
+                        // dynamically allocated by the nodes or componenets.
                         new.layout(&old, &mut caches.font.write().unwrap(), scale_factor);
 
                         do_render = new.render(caches, Some(&mut old), scale_factor);
