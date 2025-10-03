@@ -9,28 +9,28 @@ MCTK uses a reactive, signal-based architecture to drive incremental updates to 
 ```mermaid
 graph TD
     subgraph "Input & State Management"
-        A["User Events (Click, Hover, etc.)"] -- triggers --> B["Event Handler (in 'Interactive' component)"];
+        A["User Events<br/>(Click, Hover, etc.)"] -- triggers --> B["Event Handler<br/>(in 'Interactive' component)"];
         B -- updates --> C["State (Signals)"];
     end
 
     subgraph "Reactive Update Pipeline"
-        D["Global Scheduler (Batches updates)"]
+        D["Global Scheduler<br/>(Batches updates)"]
         E["<b>1. CSS Parsing</b><br/>Applies styles to tree"]
-        F["<b>2. Layout Calculation (Taffy)</b><br/>Computes geometry for dirty nodes"]
-        G["<b>3. Renderable Generation</b><br/>Creates a list of drawing commands"]
+        F["<b>2. Layout Calculation (Taffy)</b><br/>Computes geometry<br/>for dirty nodes"]
+        G["<b>3. Renderable Generation</b><br/>Creates a list of<br/>drawing commands"]
 
         D -- "runs on next frame" --> E --> F --> G
     end
 
     subgraph "Rendering"
-        H["<b>4. Renderer (Impeller)</b><br/>Draws damage region to screen"] --> J[Screen Output];
+        H["<b>4. Renderer (Impeller)</b><br/>Draws damage region<br/>to screen"] --> J[Screen Output];
     end
 
     C --> D
     G --> H
 
-    linkStyle 6 stroke:#ddd0,stroke-width:2px;
-    linkStyle 7 stroke:#ddd0,stroke-width:2px;
+    linkStyle 6 stroke:#ddd,stroke-width:2px;
+    linkStyle 7 stroke:#ddd,stroke-width:2px;
 ```
 The rendering pipeline follows these steps:
 1. **Styling**: A CSS parser applies styling rules to the component tree.
